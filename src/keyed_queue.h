@@ -8,8 +8,50 @@
 #ifndef _KEYED_QUEUE_
 #define _KEYED_QUEUE_
 
+#include <utility>
+#include <exception>
+
+class lookup_error : std::exception {
+public:
+
+
+};
+
 template <class K, class V> class keyed_queue {
 public:
+
+    class k_iterator {
+    public:
+        k_iterator() {
+            //TODO: Implement
+            throw "Not implemented";
+        }
+        
+        k_iterator(k_iterator const& i) {
+            //TODO: Implement
+            throw "Not implemented";
+        }
+        
+        void operator++() {
+            //TODO: Implement
+            throw "Not implemented";
+        }
+        
+        bool operator==(k_iterator k) {
+            //TODO: Implement
+            throw "Not implemented";
+        }
+        
+        bool operator!=(k_iterator k) {
+            //TODO: Implement
+            throw "Not implemented";
+        }
+        
+        K operator*() {
+            //TODO: Implement
+            throw "Not implemented";
+        }
+    };
 
     keyed_queue() {
         //TODO: Implement
@@ -37,6 +79,11 @@ public:
         throw "Not implemented";
     }
     
+    void pop() {
+        //TODO: Implement
+        throw "Not implemented";
+    }
+    
     void pop(K const &k, V const &v) {
         //TODO: Implement
         throw "Not implemented";
@@ -50,7 +97,6 @@ public:
     void move_to_back(K const &k) {
         //TODO: Implement
         throw "Not implemented";
-        return *this;
     }
     
     std::pair<K const &, V &> front() {
@@ -114,6 +160,16 @@ public:
         //TODO: Implement
         throw "Not implemented";
         return 0;
+    }
+    
+    k_iterator k_begin() {
+        //TODO: Implement
+        throw "Not implemented";
+    }
+    
+    k_iterator k_end() {
+        //TODO: Implement
+        throw "Not implemented";
     }
 };
 
