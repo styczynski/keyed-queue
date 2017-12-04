@@ -58,90 +58,91 @@ a konstruktor przenoszący i destruktor muszą być no-throw.
 Tam gdzie jest to możliwe i uzasadnione należy dodać kwalifikator noexcept.
 
 
-- **Konstruktor bezparametrowy** tworzący pustą kolejkę. Czas **O(1)**.
-    keyed_queue();
+- **Konstruktor bezparametrowy** tworzący pustą kolejkę. Czas **O(1)**.  
+    `keyed_queue();`
 
 
-- **Konstruktor kopiujący**.
-  Powinien on mieć semantykę copy-on-write, a więc nie kopiuje wewnętrznych struktur danych, jeśli nie jest to potrzebne. Kolejki współdzielą struktury do czasu modyfikacji jednej z nich. Czas **O(1)** lub **O(n log n)**, jeśli konieczne jest wykonanie kopii.
-    keyed_queue(keyed_queue const &);
+- **Konstruktor kopiujący**.  
+  Powinien on mieć semantykę copy-on-write, a więc nie kopiuje wewnętrznych struktur danych, jeśli nie jest to potrzebne. Kolejki współdzielą struktury do czasu modyfikacji jednej z nich. Czas **O(1)** lub **O(n log n)**, jeśli konieczne jest wykonanie kopii.  
+    `keyed_queue(keyed_queue const &);`
 
 
-- **Konstruktor przenoszący**. Czas **O(1)**.
-    keyed_queue(keyed_queue &&);
+- **Konstruktor przenoszący**. Czas **O(1)**.  
+    `keyed_queue(keyed_queue &&);`
 
 
-- **Operator przypisania**. Operator powinien przyjmować argument przez wartość. Czas **O(1)**.
-    keyed_queue &operator=(keyed_queue other);
+- **Operator przypisania**. Operator powinien przyjmować argument przez wartość. Czas **O(1)**.  
+    `keyed_queue &operator=(keyed_queue other);`
 
 
-- **Metoda push** wstawia wartość **v** na koniec kolejki, nadając jej klucz **k**. Czas **O(log n)** + ew. czas kopiowania.
-    void push(K const &k, V const &v);
+- **Metoda push** wstawia wartość **v** na koniec kolejki, nadając jej klucz **k**. Czas **O(log n)** + ew. czas kopiowania.  
+    `void push(K const &k, V const &v);`
 
 
-- **Metoda pop()** usuwa pierwszy element z kolejki. Jeśli kolejka jest pusta, to podnosi wyjątek lookup_error. Czas **O(log n)** + ew. czas kopiowania.
-    void pop();
+- **Metoda pop()** usuwa pierwszy element z kolejki. Jeśli kolejka jest pusta, to podnosi wyjątek lookup_error. Czas **O(log n)** + ew. czas kopiowania.  
+    `void pop();`
 
 
-- **Metoda pop(k)** usuwa pierwszy element o podanym kluczu z kolejki. Jeśli podanego klucza nie ma w kolejce, to podnosi wyjątek **lookup_error**. Czas **O(log n)** + ew. czas kopiowania.
-    void pop(K const &);
+- **Metoda pop(k)** usuwa pierwszy element o podanym kluczu z kolejki. Jeśli podanego klucza nie ma w kolejce, to podnosi wyjątek **lookup_error**. Czas **O(log n)** + ew. czas kopiowania.  
+    `void pop(K const &);`
 
 
-- **Metoda move_to_back** przesuwa elementy o kluczu k na koniec kolejki, zachowując ich kolejność względem siebie. Zgłasza wyjątek lookup_error, gdy elementu o podanym kluczu nie ma na liście. **Czas O(m + log n)** + ew. czas kopiowania, gdzie m == count(k).
-    void move_to_back(K const &k);
+- **Metoda move_to_back** przesuwa elementy o kluczu k na koniec kolejki, zachowując ich kolejność względem siebie. Zgłasza wyjątek lookup_error, gdy elementu o podanym kluczu nie ma na liście. **Czas O(m + log n)** + ew. czas kopiowania, gdzie m == count(k).  
+    `void move_to_back(K const &k);`
 
 
-- **Metody front i back** zwracają parę klucz-wartość będącą odpowiednio na początku i końcu kolejki. Zwrócona para powinna umożliwić modyfikację wartości, ale nie klucza. Dowolna operacja potencjalnie modyfikująca kolejkę może unieważnić zwrócone referencje. Jeśli kolejka jest pusta, to podnosi wyjątek **lookup_error**. Czas **O(1)** + dla wersji bez const ew. czas kopiowania.
-    std::pair front();
-    std::pair back();
-    std::pair front() const;
-    std::pair back() const;
+- **Metody front i back** zwracają parę klucz-wartość będącą odpowiednio na początku i końcu kolejki. Zwrócona para powinna umożliwić modyfikację wartości, ale nie klucza. Dowolna operacja potencjalnie modyfikująca kolejkę może unieważnić zwrócone referencje. Jeśli kolejka jest pusta, to podnosi wyjątek **lookup_error**. Czas **O(1)** + dla wersji bez const ew. czas kopiowania.  
+    `std::pair front();`
+    `std::pair back();`
+    `std::pair front() const;`
+    `std::pair back() const;`
 
 
-- **Metody first i last** zwracają odpowiednio pierwszą i ostatnią parę klucz-wartość o danym kluczu, podobnie jak front i back. Jeśli podanego klucza nie ma w kolejce, to podnosi wyjątek lookup_error. Czas **O(log n)** + dla wersji bez const ew. czas kopiowania.
-    std::pair first(K const &key);
-    std::pair last(K const &key);
-    std::pair first(K const &key) const;
-    std::pair last(K const &key) const;
+- **Metody first i last** zwracają odpowiednio pierwszą i ostatnią parę klucz-wartość o danym kluczu, podobnie jak front i back. Jeśli podanego klucza nie ma w kolejce, to podnosi wyjątek lookup_error. Czas **O(log n)** + dla wersji bez const ew. czas kopiowania.  
+    `std::pair first(K const &key);`  
+    `std::pair last(K const &key);`  
+    `std::pair first(K const &key) const;`  
+    `std::pair last(K const &key) const;`  
 
 
-- **Metoda size** zwraca liczbę elementów w kolejce. Czas **O(1)**.
-    size_t size() const;
+- **Metoda size** zwraca liczbę elementów w kolejce. Czas **O(1)**.  
+    `size_t size() const;`
 
 
-- **Metoda empty** zwraca true, gdy kolejka jest pusta, a false w przeciwnym przypadku. Czas **O(1)**.
-    bool empty() const;
+- **Metoda empty** zwraca true, gdy kolejka jest pusta, a false w przeciwnym przypadku. Czas **O(1)**.  
+    `bool empty() const;`
 
 
-- **Metoda clear** usuwa wszystkie elementy z kolejki. Czas **O(n)**.
-    void clear();
+- **Metoda clear** usuwa wszystkie elementy z kolejki. Czas **O(n)**.  
+    `void clear();`
 
 
-- **Metoda count** zwraca liczbę elementów o podanym kluczu. Czas **O(log n)**.
-    size_t count(K const &) const;
+- **Metoda count** zwraca liczbę elementów o podanym kluczu. Czas **O(log n)**.  
+    `size_t count(K const &) const;`
 
 
-- **Iterator k_iterator** oraz **metody k_begin i k_end**, pozwalające przeglądać zbiór kluczy w rosnącej kolejności wartości. Iteratory mogą być unieważnione przez dowolną operację modyfikacji kolejki zakończoną powodzeniem (w tym front, back, first i last w wersjach bez const). Iterator powinien udostępniać przynajmniej następujące operacje:
-  - **konstruktor bezparametrowy i kopiujący**
-  - **operator++ prefiksowy**
-  - **operator== i operator!=**
-  - **operator***
-  - Do implementacji można użyć biblioteki **Boost.Operators**.
-  - Wszelkie operacje w czasie **O(log n)**. Przejrzenie całej kolejki w czasie **O(n)**.
+- **Iterator k_iterator** oraz **metody k_begin i k_end**, pozwalające przeglądać zbiór kluczy w rosnącej kolejności wartości. Iteratory mogą być unieważnione przez dowolną operację modyfikacji kolejki zakończoną powodzeniem (w tym front, back, first i last w wersjach bez const). Iterator powinien udostępniać przynajmniej następujące operacje:  
+  - **konstruktor bezparametrowy i kopiujący**  
+  - **operator++ prefiksowy**  
+  - **operator== i operator!=**  
+  - **operator***  
+  - Do implementacji można użyć biblioteki **Boost.Operators**.  
+  - Wszelkie operacje w czasie **O(log n)**. Przejrzenie całej kolejki w czasie **O(n)**.  
 
 Iteratory służą jedynie do przeglądania kolejki i za ich pomocą nie można
 modyfikować listy, więc zachowują się jak const_iterator z STL.
 
 Klasa **lookup_error** powinna być zdefiniowana na zewnątrz klasy **keyed_queue**
-i powinna dziedziczyć po std::exception.
+i powinna dziedziczyć po std::exception.  
 
 Klasa **keyed_queue** powinna być przezroczysta na wyjątki, czyli powinna
 przepuszczać wszelkie wyjątki zgłaszane przez wywoływane przez nią funkcje
 i przez operacje na jej składowych, a obserwowalny stan obiektów
 nie powinien się zmienić. W szczególności operacje modyfikacji zakończone
-niepowodzeniem nie powinny unieważniać iteratorów.
+niepowodzeniem nie powinny unieważniać iteratorów.  
 
 # Przykład użycia
+```c++
     #include "keyed_queue.h"
     #include <cassert>
     #include <vector>
@@ -218,6 +219,8 @@ niepowodzeniem nie powinny unieważniać iteratorów.
       return 0;
     }
     
+```
+
 # Rozwiązanie
 
 Rozwiązanie powinno być zawarte w pliku keyed_queue.h, który należy umieścić w repozytorium w katalogu **grupaN/zadanie5/ab123456+cd123456** lub grupaN/zadanie5/ab123456+cd123456+ef123456 gdzie N jest numerem grupy, a ab123456, cd123456, ef123456 są identyfikatorami członków zespołu umieszczającego to rozwiązanie.
