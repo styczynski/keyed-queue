@@ -98,7 +98,6 @@ private:
     public:
       
         queue_data(const queue_data& q) {
-            std::cout << "Copy queue\n";
             for(auto i=q.fifo.begin(); i!=q.fifo.end(); ++i) {
                 fifo.push_back(*i);
                 auto el_i = fifo.end();
@@ -289,6 +288,8 @@ private:
         std::string to_string() const noexcept {
             std::ostringstream out;
             
+            // Debug section
+            /*
             out << "{\n";
             out << " * keys:\n";
             for(auto k : keys) {
@@ -299,10 +300,19 @@ private:
               out << "\n";
             }
             out << " * fifo:\n";
+            */
+            
+            out << "{ ";
+            bool isFirst = true;
             for(auto e : fifo) {
-                out << "   " << e.first << "=> " << e.second << "\n";
+                if(!isFirst) {
+                    out << ", ";
+                } else {
+                    isFirst = false;
+                }
+                out << e.first << " => " << e.second;
             }
-            out << "}";
+            out << " }";
             
             return out.str();
         }
@@ -310,19 +320,19 @@ private:
     
     class queue_shared_data {
     private:
-        std::unique_ptr<bool> sharable;
+        std::shared_ptr<bool> shareableState;
         std::shared_ptr<queue_data> shared_data;
         
     public:
     
         // Create empty non-shared object
-        queue_shared_data(): sharable(std::make_unique<bool>(true)), shared_data(std::make_shared<queue_data>(queue_data())) {
-            
+        queue_shared_data(): shareableState(std::make_shared<bool>(true)), shared_data(std::make_shared<queue_data>(queue_data())) {
+        
         }
         
         // Share object
-        queue_shared_data(queue_shared_data const& d): sharable(std::make_unique<bool>(true)) {
-            if(*d.sharable) {
+        queue_shared_data(queue_shared_data const& d): shareableState(std::make_shared<bool>(true)) {
+            if(*d.shareableState) {
                 shared_data = d.shared_data;
             } else {
                 shared_data = std::make_shared<queue_data>(*d.shared_data);
@@ -330,8 +340,8 @@ private:
         }
         
         // Share object
-        queue_shared_data(queue_shared_data&& d): sharable(std::make_unique<bool>(true)) {
-            if(*d.sharable) {
+        queue_shared_data(queue_shared_data&& d): shareableState(std::make_shared<bool>(true)) {
+            if(*d.shareableState) {
                 shared_data = d.shared_data;
             } else {
                 shared_data = std::make_shared<queue_data>(*d.shared_data);
@@ -340,7 +350,7 @@ private:
         
         // Share object
         queue_shared_data& operator= (queue_shared_data d) {
-            if(*d.sharable) {
+            if(*d.shareableState) {
                 shared_data = d.shared_data;
             } else {
                 shared_data = std::make_shared<queue_data>(*d.shared_data);
@@ -350,6 +360,7 @@ private:
         
         // Unshare object
         queue_shared_data& disjoin() {
+            if(!is_shared()) return *this;
             shared_data = std::make_shared<queue_data>(queue_data(*shared_data));
             return *this;
         }
@@ -364,8 +375,23 @@ private:
             return *shared_data;
         }
         
-        const queue_shared_data& unsharable() const noexcept {
-            *sharable = false;
+        const queue_shared_data& unshareable() const noexcept {
+            *shareableState = false;
+            return *this;
+        }
+        
+        queue_shared_data& unshareable() noexcept {
+            *shareableState = false;
+            return *this;
+        }
+        
+        const queue_shared_data& shareable() const noexcept {
+            *shareableState = true;
+            return *this;
+        }
+        
+        queue_shared_data& shareable() noexcept {
+            *shareableState = true;
             return *this;
         }
         
@@ -396,35 +422,35 @@ public:
     }
     
     void push(K const &k, V const &v) {
-        sd.disjoin().read().push(k, v);
+        sd.shareable().disjoin().read().push(k, v);
     }
     
     void pop() {
-        sd.disjoin().read().pop();
+        sd.shareable().disjoin().read().pop();
     }
     
     void pop(K const &k) {
-        sd.disjoin().read().pop(k);
+        sd.shareable().disjoin().read().pop(k);
     }
     
     void move_to_back(K const &k) {
-        sd.disjoin().read().move_to_back(k);
+        sd.shareable().disjoin().read().move_to_back(k);
     }
     
     std::pair<K const &, V &> front() {
-        return sd.disjoin().read().front();
+        return sd.disjoin().unshareable().read().front();
     }
     
     std::pair<K const &, V &> back() {
-        return sd.disjoin().read().back();
+        return sd.disjoin().unshareable().read().back();
     }
     
     std::pair<K const &, V const &> front() const {
-        return sd.unsharable().read_const().front();
+        return sd.unshareable().read_const().front();
     }
     
     std::pair<K const &, V const &> back() const {
-        return sd.unsharable().read_const().back();
+        return sd.unshareable().read_const().back();
     }
     
     std::pair<K const &, V &> first(K const &key) {
@@ -436,11 +462,11 @@ public:
     }
     
     std::pair<K const &, V const &> first(K const &key) const {
-        return sd.unsharable().read_const().first(key);
+        return sd.unshareable().read_const().first(key);
     }
     
     std::pair<K const &, V const &> last(K const &key) const {
-        return sd.unsharable().read_const().last(key);
+        return sd.unshareable().read_const().last(key);
     }
     
     size_t size() const noexcept {
@@ -453,7 +479,7 @@ public:
     
     // NOEXCEPT: Disjoin can potentially throw?
     void clear() {
-        sd.disjoin().read().clear();
+        sd.shareable().disjoin().read().clear();
     }
     
     size_t count(K const &k) const noexcept {
@@ -469,7 +495,8 @@ public:
     }
     
     std::string to_string() const noexcept {
-        return ((sd.is_shared())?"<  shared  > ":"<standalone> ") + sd.read_const().to_string();
+        /*((sd.is_shared())?"<  shared  > ":"<standalone> ") + */
+        return sd.read_const().to_string();
     }
 };
 
