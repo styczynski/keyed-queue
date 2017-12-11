@@ -18,6 +18,14 @@
 #include <assert.h>
 
 /**
+ * Enable runtime integrity checks for keyed queue.
+ * Note:
+ *    Integrity checks should be used only for debugging purposes
+ *    because they are of noticeable weight.
+ */
+constexpr bool ENABLE_INTEGRITY_CHECKS = false;
+
+/**
  * Error thrown when accessing invalid/non-existing keys/values inside keyed_queue.
  */
 class lookup_error : std::exception {
@@ -649,6 +657,67 @@ private:
             
             return out.str();
         }
+        
+        /**
+         * Perform forced integrity check.
+         * The keys mapping and fifo structure is validated.
+         * Note that integrity checks are expensive.
+         */
+        void check_integrity() const {
+            //std::cout << " ()\n";
+            // Iterate mapping
+            int entry_count = 0;
+            for(auto keys_e : keys) {
+                // Key from the mapping
+                const auto key = keys_e.first;
+                // List of iterators for the given key
+                const auto list = keys_e.second;
+                int list_index = 0;
+                entry_count += list.size();
+                for(auto key_i : list) {
+                    // Count keys from the original queue
+                    int count = 0;
+                    auto el = fifo.end();
+                    // Brutal fifo search 
+                    for(auto e=fifo.begin();e!=fifo.end();++e) {
+                        if(e->first == key) {
+                            el = e;
+                            if(count == list_index) break;
+                            ++count;
+                        }
+                    }
+                    // el is now the iterator to the n-th element with the given key
+                    // where n is equal to list_index
+                    
+                    // Iterator in the mapping must be equal to the one
+                    // Determined by brutal fifo search
+                    assert(el == key_i);
+                    
+                    ++list_index;
+                }
+                
+            }
+            
+            // Eevery fifo element must be placed inside mapping
+            assert(entry_count == (signed)fifo.size());
+            
+        }
+        
+        /**
+         * Perform integrity check only if ENABLE_INTEGRITY_CHECKS is enabled.
+         */
+        const queue_data& check() const {
+            if(ENABLE_INTEGRITY_CHECKS) check_integrity();
+            return *this;
+        }
+        
+        /**
+         * Perform integrity check only if ENABLE_INTEGRITY_CHECKS is enabled.
+         */
+        queue_data& check() {
+            if(ENABLE_INTEGRITY_CHECKS) check_integrity();
+            return *this;
+        }
     };
     
     /** Copy-on-write data wrapper */
@@ -692,7 +761,7 @@ public:
      * @param[in] v : value
      */
     void push(K const &k, V const &v) {
-        sd.shareable().disjoin().read().push(k, v);
+        sd.shareable().disjoin().read().check().push(k, v);
     }
     
     /**
@@ -701,7 +770,7 @@ public:
      * @throws lookup_error when the queue is empty
      */
     void pop() {
-        sd.shareable().disjoin().read().pop();
+        sd.shareable().disjoin().read().check().pop();
     }
     
     /**
@@ -711,7 +780,7 @@ public:
      * @throws lookup_error when there's no element with given key
      */
     void pop(K const &k) {
-        sd.shareable().disjoin().read().pop(k);
+        sd.shareable().disjoin().read().check().pop(k);
     }
     
     /**
@@ -719,7 +788,7 @@ public:
      * Operation preserves order of the key, value pairs.
      */
     void move_to_back(K const &k) {
-        sd.shareable().disjoin().read().move_to_back(k);
+        sd.shareable().disjoin().read().check().move_to_back(k);
     }
     
     /**
@@ -728,7 +797,7 @@ public:
      * @throws lookup_error when the queue is empty
      */
     std::pair<K const &, V &> front() {
-        return sd.disjoin().unshareable().read().front();
+        return sd.disjoin().unshareable().read().check().front();
     }
     
     /**
@@ -737,7 +806,7 @@ public:
      * @throws lookup_error when the queue is empty
      */
     std::pair<K const &, V &> back() {
-        return sd.disjoin().unshareable().read().back();
+        return sd.disjoin().unshareable().read().check().back();
     }
     
     /**
@@ -746,7 +815,7 @@ public:
      * @throws lookup_error when the queue is empty
      */
     std::pair<K const &, V const &> front() const {
-        return sd.unshareable().read_const().front();
+        return sd.unshareable().read_const().check().front();
     }
     
     /**
@@ -755,7 +824,7 @@ public:
      * @throws lookup_error when the queue is empty
      */
     std::pair<K const &, V const &> back() const {
-        return sd.unshareable().read_const().back();
+        return sd.unshareable().read_const().check().back();
     }
     
     /**
@@ -764,7 +833,7 @@ public:
      * @throws lookup_error when the queue does not contain element with given key
      */
     std::pair<K const &, V &> first(K const &key) {
-        return sd.disjoin().read().first(key);
+        return sd.disjoin().read().check().first(key);
     }
     
     /**
@@ -773,7 +842,7 @@ public:
      * @throws lookup_error when the queue does not contain element with given key
      */
     std::pair<K const &, V &> last(K const &key) {
-        return sd.disjoin().read().last(key);
+        return sd.disjoin().read().check().last(key);
     }
     
     /**
@@ -782,7 +851,7 @@ public:
      * @throws lookup_error when the queue does not contain element with given key
      */
     std::pair<K const &, V const &> first(K const &key) const {
-        return sd.unshareable().read_const().first(key);
+        return sd.unshareable().read_const().check().first(key);
     }
     
     /**
@@ -791,7 +860,7 @@ public:
      * @throws lookup_error when the queue does not contain element with given key
      */
     std::pair<K const &, V const &> last(K const &key) const {
-        return sd.unshareable().read_const().last(key);
+        return sd.unshareable().read_const().check().last(key);
     }
     
     /**
@@ -801,7 +870,7 @@ public:
      * @throws never
      */
     size_t size() const noexcept {
-        return sd.read_const().size();
+        return sd.read_const().check().size();
     }
     
     /**
@@ -812,7 +881,7 @@ public:
      * @throws never
      */
     bool empty() const noexcept {
-        return sd.read_const().empty();
+        return sd.read_const().check().empty();
     }
     
     // TODO: Disjoin can potentially throw?
@@ -821,7 +890,7 @@ public:
      * Clears the queue contents.
      */
     void clear() {
-        sd.shareable().disjoin().read().clear();
+        sd.shareable().disjoin().read().check().clear();
     }
     
     /**
@@ -831,7 +900,7 @@ public:
      * @throws never
      */
     size_t count(K const &k) const noexcept {
-        return sd.read_const().count(k);
+        return sd.read_const().check().count(k);
     }
     
     /**
@@ -840,7 +909,7 @@ public:
      * @returns keyed queue iterator
      */
     k_iterator k_begin() {
-        return sd.read().k_begin();
+        return sd.read().check().k_begin();
     }
     
     /**
@@ -849,7 +918,7 @@ public:
      * @returns keyed queue iterator
      */
     k_iterator k_end() {
-        return sd.read().k_end();
+        return sd.read().check().k_end();
     }
     
     /**
@@ -858,7 +927,16 @@ public:
      * @returns human readable representation
      */
     std::string to_string() const {
-        return sd.read_const().to_string();
+        return sd.read_const().check().to_string();
+    }
+    
+    /**
+     * Request data structure to perform forced integrity check.
+     * Integrity checks validate internal structure of data.
+     * Note that they are taking huge amounts of time!
+     */
+    void check() { 
+        sd.read().integrity_check();
     }
 };
 

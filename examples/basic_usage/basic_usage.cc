@@ -17,7 +17,7 @@ int main()
   
   std::cout << "B\n";
   q1.push(1, 1);
-  
+ 
   std::cout << "C\n";
   std::cout << q1.to_string() << "\n";
   
