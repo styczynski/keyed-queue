@@ -331,6 +331,7 @@ private:
          */
         queue_data(const queue_data& q) {
             //TODO: Validate
+            // For all elements in the copied queue
             for(auto i=q.fifo.begin(); i!=q.fifo.end(); ++i) {
                 // Push data to queue
                 fifo.push_back(*i);
@@ -374,6 +375,9 @@ private:
                 // Insert new pair to the helper buffer
                 fifo_delta.push_back({k, v}); // < This may fail!
             } catch(...) {
+                // TODO: This probably does nothing?
+                //       The try-catch block should be removed
+                // Rethrow error
                 throw;
             }
             
