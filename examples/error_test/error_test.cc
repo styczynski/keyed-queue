@@ -140,7 +140,7 @@ public:
     /**
      * @throws COMPARE_FAIL
      */
-    bool operator< (const comparable_error_thrower& other) {
+    bool operator< (const comparable_error_thrower& other) const {
         if(throw_on_compare) {
             throw COMPARE_FAIL;
         }
@@ -150,7 +150,7 @@ public:
     /**
      * @throws COMPARE_FAIL
      */
-    bool operator> (const comparable_error_thrower& other) {
+    bool operator> (const comparable_error_thrower& other) const {
         if(throw_on_compare) {
             throw COMPARE_FAIL;
         }
@@ -160,7 +160,7 @@ public:
     /**
      * @throws COMPARE_FAIL
      */
-    bool operator<= (const comparable_error_thrower& other) {
+    bool operator<= (const comparable_error_thrower& other) const {
         if(throw_on_compare) {
             throw COMPARE_FAIL;
         }
@@ -170,7 +170,7 @@ public:
     /**
      * @throws COMPARE_FAIL
      */
-    bool operator>= (const comparable_error_thrower& other) {
+    bool operator>= (const comparable_error_thrower& other) const {
         if(throw_on_compare) {
             throw COMPARE_FAIL;
         }
@@ -180,7 +180,7 @@ public:
     /**
      * @throws COMPARE_FAIL
      */
-    bool operator== (const comparable_error_thrower& other) {
+    bool operator== (const comparable_error_thrower& other) const {
         if(throw_on_compare) {
             throw COMPARE_FAIL;
         }
@@ -217,21 +217,53 @@ void custom_assert(bool val, std::string fail_comment) {
 // default constructor
 
 auto default_constructor_working = []{
-    // TODO
-    reportCaseFail("default_constructor_working",
-                   "",
-                   "Unimplemented");
-    return false;
+    try {
+        keyed_queue<int, int> kq1;
+        keyed_queue<comparable_error_thrower, comparable_error_thrower> kq2;
+    } catch (...) {
+        reportCaseFail("default_constructor_working",
+                       "No errors thrown",
+                       "Unknown error thrown");
+        return false;
+    }
+    return true;
 };
 
 // copy constructor
 
 auto copy_constructor_working = []{
-    // TODO
-    reportCaseFail("copy_constructor_working",
-                   "",
-                   "Unimplemented");
-    return false;
+    try {
+        keyed_queue<int, int> kq1;
+        keyed_queue<comparable_error_thrower, comparable_error_thrower> kq2;
+
+        auto kq1_copy1 = kq1;
+        custom_assert(kq1_copy1.empty(), "Copied queue contains random elements");
+        auto kq2_copy1 = kq2;
+        custom_assert(kq2_copy1.empty(), "Copied queue contains random elements");
+
+        kq1.push(1, 2);
+        kq1.push(3, 4);
+        kq2.push(comparable_error_thrower(1), comparable_error_thrower(2));
+        kq2.push(comparable_error_thrower(3), comparable_error_thrower(4));
+        auto kq1_copy2(kq1);
+        custom_assert(kq1_copy2.front().first == kq1.front().first &&
+                      kq1_copy2.front().second == kq1.front().second &&
+                      kq1_copy2.back().first == kq1.back().first &&
+                      kq1_copy2.back().second == kq1.back().second,
+                      "Copied queue contains wrong elements");
+        auto kq2_copy2(kq2);
+        custom_assert(kq2_copy2.front().first == kq2.front().first &&
+                      kq2_copy2.front().second == kq2.front().second &&
+                      kq2_copy2.back().first == kq2.back().first &&
+                      kq2_copy2.back().second == kq2.back().second,
+                      "Copied queue contains wrong elements");
+    } catch (...) {
+        reportCaseFail("copy_constructor_working",
+                       "No errors thrown",
+                       "Unknown error thrown");
+        return false;
+    }
+    return true;
 };
 
 auto copy_constructor_key_copy_fail_does_not_modify_queue = []{
