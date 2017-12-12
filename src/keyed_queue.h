@@ -28,7 +28,7 @@ constexpr bool ENABLE_INTEGRITY_CHECKS = false;
 /**
  * Error thrown when accessing invalid/non-existing keys/values inside keyed_queue.
  */
-class lookup_error : std::exception {
+class lookup_error : public std::exception {
 private:
     std::string what_message;
 public:
@@ -490,15 +490,8 @@ private:
             auto& list = i->second;
             // For all iterators
             for(auto e=list.begin();e!=list.end();++e) {
-                // Push element to the back of the queue
-                fifo.push_back(**e);
-                // Get the new iterator
-                auto new_e = fifo.end();
-                --new_e;
-                // Remove element pointed by previous iterator value
-                fifo.erase(*e);
-                // Save new iterator value
-                *e = new_e;
+                // Move element to the back of the queue (do not perform copy)!
+                fifo.splice( fifo.end(), fifo, *e );
             }
         }
         
