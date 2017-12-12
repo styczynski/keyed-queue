@@ -47,14 +47,14 @@ private:
 public:
 
     /**
-     * Constructor for use in test cases - only way to specify when errors are thrown.
+     * Constructor for use in test cases. Allows to specify throwing behaviour in tests.
      */
     comparable_error_thrower(int val=0,
-                           bool throw_on_copy=false,
-                           bool throw_on_move=false,
-                           bool throw_on_assign=false,
-                           bool throw_on_compare=false,
-                           bool throw_on_destruct=false) {
+                             bool throw_on_copy=false,
+                             bool throw_on_move=false,
+                             bool throw_on_assign=false,
+                             bool throw_on_compare=false,
+                             bool throw_on_destruct=false) {
         this->val = val;
         this->throw_on_copy = throw_on_copy;
         this->throw_on_move = throw_on_move;
@@ -108,6 +108,22 @@ public:
         this->throw_on_assign = other.throw_on_assign;
         this->throw_on_compare = other.throw_on_compare;
         this->throw_on_destruct = other.throw_on_destruct;
+    }
+
+    /**
+     * Allows to modify throwing behaviour in tests.
+     */
+    void set_hooks(bool throw_on_copy=false,
+                    bool throw_on_move=false,
+                    bool throw_on_assign=false,
+                    bool throw_on_compare=false,
+                    bool throw_on_destruct=false) {
+        this->val = val;
+        this->throw_on_copy = throw_on_copy;
+        this->throw_on_move = throw_on_move;
+        this->throw_on_assign = throw_on_assign;
+        this->throw_on_compare = throw_on_compare;
+        this->throw_on_destruct = throw_on_destruct;
     }
 
     /**
@@ -198,7 +214,169 @@ void custom_assert(bool val, std::string fail_comment) {
 // TEST CASES - Define Your test cases here
 // All cases should be boolean functions without arguments, and with noexcept guarantee
 
-auto push_working_without_errors = []{
+// default constructor
+
+auto default_constructor_working = []{
+    // TODO
+    reportCaseFail("default_constructor_working",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+// copy constructor
+
+auto copy_constructor_working = []{
+    // TODO
+    reportCaseFail("copy_constructor_working",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto copy_constructor_key_copy_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("copy_constructor_key_copy_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto copy_constructor_key_move_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("copy_constructor_key_move_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto copy_constructor_key_assign_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("copy_constructor_key_assign_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto copy_constructor_key_compare_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("copy_constructor_key_compare_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto copy_constructor_val_copy_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("copy_constructor_key_compare_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+// move constructor
+
+auto move_constructor_working = []{
+    // TODO
+    reportCaseFail("move_constructor_working",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto move_constructor_key_copy_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("move_constructor_key_copy_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto move_constructor_key_move_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("move_constructor_key_move_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto move_constructor_key_assign_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("move_constructor_key_assign_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto move_constructor_key_compare_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("move_constructor_key_compare_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto move_constructor_val_copy_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("move_constructor_val_copy_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+// assignment operator
+
+auto assign_working = []{
+    // TODO
+    reportCaseFail("assign_working",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto assign_key_copy_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("assign_key_copy_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto assign_key_move_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("assign_key_move_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto assign_key_assign_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("assign_key_assign_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto assign_key_compare_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("assign_key_compare_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto assign_val_copy_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("assign_val_copy_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+// push
+
+auto push_working = []{
     try {
         keyed_queue<int, int> kq;
         kq.push(1, 3);
@@ -206,13 +384,13 @@ auto push_working_without_errors = []{
         custom_assert(kq.front().second == 3, "Values do not match");
     } catch(int e) {
         if(e == ASSERTION_FAIL) {
-            reportCaseFail("push_working_without_errors",
+            reportCaseFail("push_working",
                            "",
                            "inserted values do not match given ones");
             return false;
         }
     } catch (...) {
-        reportCaseFail("push_working_without_errors",
+        reportCaseFail("push_working",
                        "no exceptions thrown",
                        "unknown exception thrown");
         return false;
@@ -220,42 +398,394 @@ auto push_working_without_errors = []{
     return true;
 };
 
-auto copy_fail_does_not_modify_target_queue = []{
+auto push_key_copy_fail_does_not_modify_queue = []{
     // TODO
-    reportCaseFail("copy_fail_does_not_modify_target_queue",
+    reportCaseFail("push_key_copy_fail_does_not_modify_queue",
                    "",
                    "Unimplemented");
     return false;
 };
 
-auto move_fail_does_not_modify_target_queue = []{
+auto push_key_move_fail_does_not_modify_queue = []{
     // TODO
-    reportCaseFail("move_fail_does_not_modify_target_queue",
+    reportCaseFail("push_key_move_fail_does_not_modify_queue",
                    "",
                    "Unimplemented");
     return false;
 };
 
-auto assignment_fail_does_not_modify_target_queue = []{
+auto push_key_assign_fail_does_not_modify_queue = []{
     // TODO
-    reportCaseFail("assignment_fail_does_not_modify_target_queue",
+    reportCaseFail("push_key_assign_fail_does_not_modify_queue",
                    "",
                    "Unimplemented");
     return false;
 };
+
+auto push_key_compare_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("push_key_compare_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto push_val_copy_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("push_val_copy_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+// pop
+
+auto pop_working = []{
+    // TODO
+    reportCaseFail("pop_working",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto pop_key_copy_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("pop_key_copy_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto pop_key_move_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("pop_key_move_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto pop_key_assign_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("pop_key_assign_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto pop_key_compare_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("pop_key_compare_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto pop_val_copy_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("pop_val_copy_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+// pop with key
+
+auto pop_w_key_working = []{
+    // TODO
+    reportCaseFail("pop_w_key_working",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto pop_w_key_key_copy_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("pop_w_key_key_copy_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto pop_w_key_key_move_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("pop_w_key_key_move_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto pop_w_key_key_assign_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("pop_w_key_key_assign_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto pop_w_key_key_compare_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("pop_w_key_key_compare_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto pop_w_key_val_copy_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("pop_w_key_val_copy_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+// move to back
+
+auto move_to_back_working = []{
+    // TODO
+    reportCaseFail("move_to_back_working",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto move_to_back_key_copy_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("move_to_back_key_copy_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto move_to_back_key_move_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("move_to_back_key_move_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto move_to_back_key_assign_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("move_to_back_key_assign_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto move_to_back_key_compare_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("move_to_back_key_compare_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto move_to_back_val_copy_fail_does_not_modify_queue = []{
+    // TODO
+    reportCaseFail("move_to_back_val_copy_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+// front and back
+
+auto front_working_on_non_empty_list = []{
+    // TODO
+    reportCaseFail("front_working_on_non_empty_list",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto front_throws_err_on_empty_list = []{
+    // TODO
+    reportCaseFail("front_throws_err_on_empty_list",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto end_working_on_non_empty_list = []{
+    // TODO
+    reportCaseFail("end_working_on_non_empty_list",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto end_throws_err_on_empty_list = []{
+    // TODO
+    reportCaseFail("end_throws_err_on_empty_list",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+// first and last
+
+auto first_working_on_non_empty_list = []{
+    // TODO
+    reportCaseFail("first_working_on_non_empty_list",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto first_throws_err_on_empty_list = []{
+    // TODO
+    reportCaseFail("first_throws_err_on_empty_list",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto last_working_on_non_empty_list = []{
+    // TODO
+    reportCaseFail("last_working_on_non_empty_list",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto last_throws_err_on_empty_list = []{
+    // TODO
+    reportCaseFail("last_throws_err_on_empty_list",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+// size and empty
+
+auto size_working = []{
+    // TODO
+    reportCaseFail("size_working",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto empty_working = []{
+    // TODO
+    reportCaseFail("empty_working",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+// clear
+
+auto clear_working_on_non_empty_list = []{
+    // TODO
+    reportCaseFail("clear_working_on_non_empty_list",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto clear_working_on_empty_list = []{
+    // TODO
+    reportCaseFail("clear_working_on_empty_list",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+// count
+
+auto count_working_on_non_empty_list = []{
+    // TODO
+    reportCaseFail("count_working_on_non_empty_list",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto count_working_on_empty_list = []{
+    // TODO
+    reportCaseFail("count_working_on_empty_list",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto count_fails_safely_when_key_comparison_fails = []{
+    // TODO
+    reportCaseFail("copy_constructor_key_compare_fail_does_not_modify_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+
+// TODO: Make tests for iterator
 
 // TEST RUNNER ----------------------------------------------------------------------------------------
 
 // TODO: Add cases to run here:
 bool (*cases_to_run[])(void) = {
-        push_working_without_errors,
-        copy_fail_does_not_modify_target_queue,
-        move_fail_does_not_modify_target_queue,
-        assignment_fail_does_not_modify_target_queue
+        default_constructor_working,
+        copy_constructor_working,
+        copy_constructor_key_copy_fail_does_not_modify_queue,
+        copy_constructor_key_move_fail_does_not_modify_queue,
+        copy_constructor_key_assign_fail_does_not_modify_queue,
+        copy_constructor_key_compare_fail_does_not_modify_queue,
+        copy_constructor_val_copy_fail_does_not_modify_queue,
+        move_constructor_working,
+        move_constructor_key_copy_fail_does_not_modify_queue,
+        move_constructor_key_move_fail_does_not_modify_queue,
+        move_constructor_key_assign_fail_does_not_modify_queue,
+        move_constructor_key_compare_fail_does_not_modify_queue,
+        move_constructor_val_copy_fail_does_not_modify_queue,
+        assign_working,
+        assign_key_copy_fail_does_not_modify_queue,
+        assign_key_move_fail_does_not_modify_queue,
+        assign_key_assign_fail_does_not_modify_queue,
+        assign_key_compare_fail_does_not_modify_queue,
+        assign_val_copy_fail_does_not_modify_queue,
+        push_working,
+        push_key_copy_fail_does_not_modify_queue,
+        push_key_move_fail_does_not_modify_queue,
+        push_key_assign_fail_does_not_modify_queue,
+        push_key_compare_fail_does_not_modify_queue,
+        push_val_copy_fail_does_not_modify_queue,
+        pop_working,
+        pop_key_copy_fail_does_not_modify_queue,
+        pop_key_move_fail_does_not_modify_queue,
+        pop_key_assign_fail_does_not_modify_queue,
+        pop_key_compare_fail_does_not_modify_queue,
+        pop_val_copy_fail_does_not_modify_queue,
+        pop_w_key_working,
+        pop_w_key_key_copy_fail_does_not_modify_queue,
+        pop_w_key_key_move_fail_does_not_modify_queue,
+        pop_w_key_key_assign_fail_does_not_modify_queue,
+        pop_w_key_key_compare_fail_does_not_modify_queue,
+        pop_w_key_val_copy_fail_does_not_modify_queue,
+        move_to_back_working,
+        move_to_back_key_copy_fail_does_not_modify_queue,
+        move_to_back_key_move_fail_does_not_modify_queue,
+        move_to_back_key_assign_fail_does_not_modify_queue,
+        move_to_back_key_compare_fail_does_not_modify_queue,
+        move_to_back_val_copy_fail_does_not_modify_queue,
+        front_working_on_non_empty_list,
+        front_throws_err_on_empty_list,
+        end_working_on_non_empty_list,
+        end_throws_err_on_empty_list,
+        first_working_on_non_empty_list,
+        first_throws_err_on_empty_list,
+        last_working_on_non_empty_list,
+        last_throws_err_on_empty_list,
+        size_working,
+        empty_working,
+        clear_working_on_non_empty_list,
+        clear_working_on_empty_list,
+        count_working_on_non_empty_list,
+        count_working_on_empty_list,
+        count_fails_safely_when_key_comparison_fails
 };
 
 int main() {
-
     int current_case_id = 0;
     int failed_cases = 0;
     for(auto *test_case : cases_to_run) {
