@@ -6,7 +6,6 @@
  *     ps386038  @styczynski
  */
 #include "keyed_queue.h"
-#include <cassert>
 #include <vector>
 
 /*
@@ -40,7 +39,7 @@ const int DESTRUCT_FAIL = 404;
  * It does have strong exception safety: whenever exception is thrown,
  * underlying values are not modified.
  */
-class ComparableErrorThrower {
+class comparable_error_thrower {
 private:
     int val;
     bool throw_on_copy, throw_on_move, throw_on_assign, throw_on_compare, throw_on_destruct;
@@ -50,7 +49,7 @@ public:
     /**
      * Constructor for use in test cases - only way to specify when errors are thrown.
      */
-    ComparableErrorThrower(int val=0,
+    comparable_error_thrower(int val=0,
                            bool throw_on_copy=false,
                            bool throw_on_move=false,
                            bool throw_on_assign=false,
@@ -67,7 +66,7 @@ public:
     /**
      * Default constructor
      */
-    ComparableErrorThrower() {
+    comparable_error_thrower() {
         // TODO: Create a version of this class that throws error on_default_construct
         this->val = 0;
         this->throw_on_copy = false;
@@ -82,7 +81,7 @@ public:
      * @param other
      * @throws COPY_FAIL
      */
-    ComparableErrorThrower(const ComparableErrorThrower& other) {
+    comparable_error_thrower(const comparable_error_thrower& other) {
         this->val = other.val;
         this->throw_on_copy = other.throw_on_copy;
         this->throw_on_move = other.throw_on_move;
@@ -99,7 +98,7 @@ public:
      * @param other
      * @throws MOVE_FAIL
      */
-    ComparableErrorThrower(ComparableErrorThrower&& other) {
+    comparable_error_thrower(comparable_error_thrower&& other) {
         if(throw_on_move) {
             throw MOVE_FAIL;
         }
@@ -114,7 +113,7 @@ public:
     /**
      * @throws ASSIGN_FAIL
      */
-    ComparableErrorThrower& operator= (ComparableErrorThrower& other) {
+    comparable_error_thrower& operator= (comparable_error_thrower& other) {
         if(throw_on_assign) {
             throw ASSIGN_FAIL;
         }
@@ -125,7 +124,7 @@ public:
     /**
      * @throws COMPARE_FAIL
      */
-    bool operator< (const ComparableErrorThrower& other) {
+    bool operator< (const comparable_error_thrower& other) {
         if(throw_on_compare) {
             throw COMPARE_FAIL;
         }
@@ -135,7 +134,7 @@ public:
     /**
      * @throws COMPARE_FAIL
      */
-    bool operator> (const ComparableErrorThrower& other) {
+    bool operator> (const comparable_error_thrower& other) {
         if(throw_on_compare) {
             throw COMPARE_FAIL;
         }
@@ -145,7 +144,7 @@ public:
     /**
      * @throws COMPARE_FAIL
      */
-    bool operator<= (const ComparableErrorThrower& other) {
+    bool operator<= (const comparable_error_thrower& other) {
         if(throw_on_compare) {
             throw COMPARE_FAIL;
         }
@@ -155,7 +154,7 @@ public:
     /**
      * @throws COMPARE_FAIL
      */
-    bool operator>= (const ComparableErrorThrower& other) {
+    bool operator>= (const comparable_error_thrower& other) {
         if(throw_on_compare) {
             throw COMPARE_FAIL;
         }
@@ -165,13 +164,15 @@ public:
     /**
      * @throws COMPARE_FAIL
      */
-    bool operator== (const ComparableErrorThrower& other) {
+    bool operator== (const comparable_error_thrower& other) {
         if(throw_on_compare) {
             throw COMPARE_FAIL;
         }
         return this->val == other.val;
     }
 };
+
+// HELPER FUNCTIONS for test runner and test cases
 
 void reportCaseFail(const std::string& case_name,
                     const std::string& expected_behaviour="",
@@ -184,23 +185,73 @@ void reportCaseFail(const std::string& case_name,
     std::cout << std::endl;
 }
 
+const int ASSERTION_FAIL = 500;
+
+void custom_assert(bool val, std::string fail_comment) {
+    if(!val) {
+        std::cout << fail_comment << std::endl; // TODO: Not sure this is the best place for error logging
+        throw ASSERTION_FAIL;
+    }
+}
+
 
 // TEST CASES - Define Your test cases here
 // All cases should be boolean functions without arguments, and with noexcept guarantee
 
-bool copyFailDoesNotModifyTargetQueue() noexcept {
-    // TODO
-    reportCaseFail("Unimplemented");
-    return false;
-}
+auto push_working_without_errors = []{
+    try {
+        keyed_queue<int, int> kq;
+        kq.push(1, 3);
+        custom_assert(kq.front().first == 1, "Keys do not match");
+        custom_assert(kq.front().second == 3, "Values do not match");
+    } catch(int e) {
+        if(e == ASSERTION_FAIL) {
+            reportCaseFail("push_working_without_errors",
+                           "",
+                           "inserted values do not match given ones");
+            return false;
+        }
+    } catch (...) {
+        reportCaseFail("push_working_without_errors",
+                       "no exceptions thrown",
+                       "unknown exception thrown");
+        return false;
+    }
+    return true;
+};
 
-// TODO: Add test cases
+auto copy_fail_does_not_modify_target_queue = []{
+    // TODO
+    reportCaseFail("copy_fail_does_not_modify_target_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto move_fail_does_not_modify_target_queue = []{
+    // TODO
+    reportCaseFail("move_fail_does_not_modify_target_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
+
+auto assignment_fail_does_not_modify_target_queue = []{
+    // TODO
+    reportCaseFail("assignment_fail_does_not_modify_target_queue",
+                   "",
+                   "Unimplemented");
+    return false;
+};
 
 // TEST RUNNER ----------------------------------------------------------------------------------------
 
 // TODO: Add cases to run here:
 bool (*cases_to_run[])(void) = {
-        copyFailDoesNotModifyTargetQueue
+        push_working_without_errors,
+        copy_fail_does_not_modify_target_queue,
+        move_fail_does_not_modify_target_queue,
+        assignment_fail_does_not_modify_target_queue
 };
 
 int main() {
