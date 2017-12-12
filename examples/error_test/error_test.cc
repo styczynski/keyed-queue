@@ -82,15 +82,15 @@ public:
      * @throws COPY_FAIL
      */
     comparable_error_thrower(const comparable_error_thrower& other) {
+        if(other.throw_on_copy) {
+            throw COPY_FAIL;
+        }
         this->val = other.val;
         this->throw_on_copy = other.throw_on_copy;
         this->throw_on_move = other.throw_on_move;
         this->throw_on_assign = other.throw_on_assign;
         this->throw_on_compare = other.throw_on_compare;
         this->throw_on_destruct = other.throw_on_destruct;
-        if(throw_on_copy) {
-            throw COPY_FAIL;
-        }
     }
 
     /**
@@ -99,7 +99,7 @@ public:
      * @throws MOVE_FAIL
      */
     comparable_error_thrower(comparable_error_thrower&& other) {
-        if(throw_on_move) {
+        if(other.throw_on_move) {
             throw MOVE_FAIL;
         }
         this->val = other.val;
@@ -118,12 +118,11 @@ public:
                     bool throw_on_assign=false,
                     bool throw_on_compare=false,
                     bool throw_on_destruct=false) {
-        this->val = val;
         this->throw_on_copy = throw_on_copy;
         this->throw_on_move = throw_on_move;
         this->throw_on_assign = throw_on_assign;
         this->throw_on_compare = throw_on_compare;
-        this->throw_on_destruct = throw_on_destruct;
+        this->throw_on_destruct = throw_on_destruct; // TODO: Not testing this right now
     }
 
     /**
@@ -205,7 +204,7 @@ const int ASSERTION_FAIL = 500;
 
 void custom_assert(bool val, std::string fail_comment) {
     if(!val) {
-        std::cout << fail_comment << std::endl; // TODO: Not sure this is the best place for error logging
+        std::cout << "! ASSERTION FAIL: " << fail_comment << std::endl; // TODO: Not sure this is the best place for error logging
         throw ASSERTION_FAIL;
     }
 }
@@ -267,19 +266,63 @@ auto copy_constructor_working = []{
 };
 
 auto copy_constructor_key_copy_fail_does_not_modify_queue = []{
-    // TODO
-    reportCaseFail("copy_constructor_key_copy_fail_does_not_modify_queue",
-                   "",
-                   "Unimplemented");
-    return false;
+    int err_code = -1;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> kq;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> target;
+    try {
+        kq.push(comparable_error_thrower(10, false, false, false, false, false), comparable_error_thrower(20, false, false, false, false, false));
+        comparable_error_thrower& throwing_key = const_cast<comparable_error_thrower&>(kq.front().first);
+        throwing_key.set_hooks(true, false, false, false, false);
+        target = kq;
+    } catch(int e) {
+        err_code = e;
+    } catch (...) {
+        // do nothing
+    }
+    try {
+        custom_assert(err_code==-1 || err_code==COPY_FAIL, "Unknown error thrown: "+std::to_string(err_code));
+        if(err_code != -1) {
+            // not sure where exceptions are thrown, but if they were - no changes should've been made
+            custom_assert(kq.front().first == comparable_error_thrower(10) && kq.front().second == comparable_error_thrower(20), "Source was modified despite exception");
+            custom_assert(target.empty(), "Target was modified despite exception");
+        }
+    } catch(...) {
+        reportCaseFail("copy_constructor_key_copy_fail_does_not_modify_queue",
+                       "",
+                       "One of assertions failed - see message above");
+        return false;
+    }
+    return true;
 };
 
 auto copy_constructor_key_move_fail_does_not_modify_queue = []{
-    // TODO
-    reportCaseFail("copy_constructor_key_move_fail_does_not_modify_queue",
-                   "",
-                   "Unimplemented");
-    return false;
+    int err_code = -1;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> kq;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> target;
+    try {
+        kq.push(comparable_error_thrower(10, false, false, false, false, false), comparable_error_thrower(20, false, false, false, false, false));
+        comparable_error_thrower& throwing_key = const_cast<comparable_error_thrower&>(kq.front().first);
+        throwing_key.set_hooks(false, true, false, false, false);
+        target = kq;
+    } catch(int e) {
+        err_code = e;
+    } catch (...) {
+        // do nothing
+    }
+    try {
+        custom_assert(err_code==-1 || err_code==MOVE_FAIL, "Unknown error thrown: "+std::to_string(err_code));
+        if(err_code != -1) {
+            // not sure where exceptions are thrown, but if they were - no changes should've been made
+            custom_assert(kq.front().first == comparable_error_thrower(10) && kq.front().second == comparable_error_thrower(20), "Source was modified despite exception");
+            custom_assert(target.empty(), "Target was modified despite exception");
+        }
+    } catch(...) {
+        reportCaseFail("copy_constructor_key_move_fail_does_not_modify_queue",
+                       "",
+                       "One of assertions failed - see message above");
+        return false;
+    }
+    return true;
 };
 
 auto copy_constructor_key_assign_fail_does_not_modify_queue = []{
@@ -764,56 +807,56 @@ bool (*cases_to_run[])(void) = {
         copy_constructor_key_assign_fail_does_not_modify_queue,
         copy_constructor_key_compare_fail_does_not_modify_queue,
         copy_constructor_val_copy_fail_does_not_modify_queue,
-        move_constructor_working,
-        move_constructor_key_copy_fail_does_not_modify_queue,
-        move_constructor_key_move_fail_does_not_modify_queue,
-        move_constructor_key_assign_fail_does_not_modify_queue,
-        move_constructor_key_compare_fail_does_not_modify_queue,
-        move_constructor_val_copy_fail_does_not_modify_queue,
-        assign_working,
-        assign_key_copy_fail_does_not_modify_queue,
-        assign_key_move_fail_does_not_modify_queue,
-        assign_key_assign_fail_does_not_modify_queue,
-        assign_key_compare_fail_does_not_modify_queue,
-        assign_val_copy_fail_does_not_modify_queue,
-        push_working,
-        push_key_copy_fail_does_not_modify_queue,
-        push_key_move_fail_does_not_modify_queue,
-        push_key_assign_fail_does_not_modify_queue,
-        push_key_compare_fail_does_not_modify_queue,
-        push_val_copy_fail_does_not_modify_queue,
-        pop_working,
-        pop_key_copy_fail_does_not_modify_queue,
-        pop_key_move_fail_does_not_modify_queue,
-        pop_key_assign_fail_does_not_modify_queue,
-        pop_key_compare_fail_does_not_modify_queue,
-        pop_val_copy_fail_does_not_modify_queue,
-        pop_w_key_working,
-        pop_w_key_key_copy_fail_does_not_modify_queue,
-        pop_w_key_key_move_fail_does_not_modify_queue,
-        pop_w_key_key_assign_fail_does_not_modify_queue,
-        pop_w_key_key_compare_fail_does_not_modify_queue,
-        pop_w_key_val_copy_fail_does_not_modify_queue,
-        move_to_back_working,
-        move_to_back_key_copy_fail_does_not_modify_queue,
-        move_to_back_key_move_fail_does_not_modify_queue,
-        move_to_back_key_assign_fail_does_not_modify_queue,
-        move_to_back_key_compare_fail_does_not_modify_queue,
-        move_to_back_val_copy_fail_does_not_modify_queue,
-        front_working_on_non_empty_list,
-        front_throws_err_on_empty_list,
-        end_working_on_non_empty_list,
-        end_throws_err_on_empty_list,
-        first_working_on_non_empty_list,
-        first_throws_err_on_empty_list,
-        last_working_on_non_empty_list,
-        last_throws_err_on_empty_list,
-        size_working,
-        empty_working,
-        clear_working_on_non_empty_list,
-        clear_working_on_empty_list,
-        count_working_on_non_empty_list,
-        count_working_on_empty_list,
+//        move_constructor_working,
+//        move_constructor_key_copy_fail_does_not_modify_queue,
+//        move_constructor_key_move_fail_does_not_modify_queue,
+//        move_constructor_key_assign_fail_does_not_modify_queue,
+//        move_constructor_key_compare_fail_does_not_modify_queue,
+//        move_constructor_val_copy_fail_does_not_modify_queue,
+//        assign_working,
+//        assign_key_copy_fail_does_not_modify_queue,
+//        assign_key_move_fail_does_not_modify_queue,
+//        assign_key_assign_fail_does_not_modify_queue,
+//        assign_key_compare_fail_does_not_modify_queue,
+//        assign_val_copy_fail_does_not_modify_queue,
+//        push_working,
+//        push_key_copy_fail_does_not_modify_queue,
+//        push_key_move_fail_does_not_modify_queue,
+//        push_key_assign_fail_does_not_modify_queue,
+//        push_key_compare_fail_does_not_modify_queue,
+//        push_val_copy_fail_does_not_modify_queue,
+//        pop_working,
+//        pop_key_copy_fail_does_not_modify_queue,
+//        pop_key_move_fail_does_not_modify_queue,
+//        pop_key_assign_fail_does_not_modify_queue,
+//        pop_key_compare_fail_does_not_modify_queue,
+//        pop_val_copy_fail_does_not_modify_queue,
+//        pop_w_key_working,
+//        pop_w_key_key_copy_fail_does_not_modify_queue,
+//        pop_w_key_key_move_fail_does_not_modify_queue,
+//        pop_w_key_key_assign_fail_does_not_modify_queue,
+//        pop_w_key_key_compare_fail_does_not_modify_queue,
+//        pop_w_key_val_copy_fail_does_not_modify_queue,
+//        move_to_back_working,
+//        move_to_back_key_copy_fail_does_not_modify_queue,
+//        move_to_back_key_move_fail_does_not_modify_queue,
+//        move_to_back_key_assign_fail_does_not_modify_queue,
+//        move_to_back_key_compare_fail_does_not_modify_queue,
+//        move_to_back_val_copy_fail_does_not_modify_queue,
+//        front_working_on_non_empty_list,
+//        front_throws_err_on_empty_list,
+//        end_working_on_non_empty_list,
+//        end_throws_err_on_empty_list,
+//        first_working_on_non_empty_list,
+//        first_throws_err_on_empty_list,
+//        last_working_on_non_empty_list,
+//        last_throws_err_on_empty_list,
+//        size_working,
+//        empty_working,
+//        clear_working_on_non_empty_list,
+//        clear_working_on_empty_list,
+//        count_working_on_non_empty_list,
+//        count_working_on_empty_list,
         count_fails_safely_when_key_comparison_fails
 };
 
