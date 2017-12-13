@@ -2,8 +2,11 @@
  * Univeristy of Warsaw 2017
  *  Task: KEYED QUEUE - basic test case runner for checking errors
  *  Usage:
+ *     Just compile and run (might need to change include path to keyed_queue.h).
+ *
+ *  Writing custom tests:
  *     Use comparable_error_thrower class as an object throwing errros.
- *     Errors can be set on construction or later using #set_hooks method (might require const_cast).
+ *     Errors can be set on construction or later using #set_hooks (might require const_cast).
  *     Test cases are boolean functions returning true if case is passing.
  *     All errors thrown within a test case must be caught.
  *     Cases to run can be selected in an array just before main() function
@@ -27,7 +30,7 @@
  * - operator [] na mapie - najlepiej w ogóle nie używać w tym zadaniu (niespójny stan i rzuca wyjątki)
  *
  * Każda operacja która się nie uda ma nie unieważniać żadnych iteratorów:
- * - operacja push - !!!
+ * - operacja push - !!! TODO: To nie jest na razie sprawdzane
  *
  * Dziedziczenie publiczne vs prywatne - domyślnie mamy dziedziczyć publicznie
  *
