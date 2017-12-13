@@ -1477,34 +1477,84 @@ auto back_throws_err_on_empty_list = []{
 // first and last
 
 auto first_working_on_non_empty_list = []{
-    // TODO
-    reportCaseFail("first_working_on_non_empty_list",
-                   "",
-                   "Unimplemented");
-    return false;
+    try {
+        keyed_queue<int, int> kq;
+        kq.push(1, 3);
+        kq.push(21, 37);
+        custom_assert(kq.first(1).first == 1, "Keys do not match");
+        custom_assert(kq.first(1).second == 3, "Values do not match");
+    } catch(int e) {
+        if(e == ASSERTION_FAIL) {
+            reportCaseFail("first_working_on_non_empty_list",
+                           "",
+                           "inserted values do not match given ones");
+            return false;
+        }
+    } catch (...) {
+        reportCaseFail("first_working_on_non_empty_list",
+                       "no exceptions thrown",
+                       "unknown exception thrown");
+        return false;
+    }
+    return true;
 };
 
 auto first_throws_err_on_empty_list = []{
-    // TODO
+    try {
+        keyed_queue<int, int> kq;
+        kq.first(7);
+    } catch(lookup_error) {
+        return true;
+    } catch (...) {
+        reportCaseFail("first_throws_err_on_empty_list",
+                       "no exceptions thrown",
+                       "unknown exception thrown");
+        return false;
+    }
     reportCaseFail("first_throws_err_on_empty_list",
-                   "",
-                   "Unimplemented");
+                   "lookup_error_thrown",
+                   "no error was thrown");
     return false;
 };
 
 auto last_working_on_non_empty_list = []{
-    // TODO
-    reportCaseFail("last_working_on_non_empty_list",
-                   "",
-                   "Unimplemented");
-    return false;
+    try {
+        keyed_queue<int, int> kq;
+        kq.push(1, 3);
+        kq.push(21, 37);
+        custom_assert(kq.last(1).first == 1, "Keys do not match");
+        custom_assert(kq.last(1).second == 3, "Values do not match");
+    } catch(int e) {
+        if(e == ASSERTION_FAIL) {
+            reportCaseFail("last_working_on_non_empty_list",
+                           "",
+                           "inserted values do not match given ones");
+            return false;
+        }
+    } catch (...) {
+        reportCaseFail("last_working_on_non_empty_list",
+                       "no exceptions thrown",
+                       "unknown exception thrown");
+        return false;
+    }
+    return true;
 };
 
 auto last_throws_err_on_empty_list = []{
-    // TODO
+    try {
+        keyed_queue<int, int> kq;
+        kq.last(7);
+    } catch(lookup_error) {
+        return true;
+    } catch (...) {
+        reportCaseFail("last_throws_err_on_empty_list",
+                       "no exceptions thrown",
+                       "unknown exception thrown");
+        return false;
+    }
     reportCaseFail("last_throws_err_on_empty_list",
-                   "",
-                   "Unimplemented");
+                   "lookup_error_thrown",
+                   "no error was thrown");
     return false;
 };
 
@@ -1624,10 +1674,10 @@ bool (*cases_to_run[])(void) = {
         front_throws_err_on_empty_list,
         back_working_on_non_empty_list,
         back_throws_err_on_empty_list,
-//        first_working_on_non_empty_list,
-//        first_throws_err_on_empty_list,
-//        last_working_on_non_empty_list,
-//        last_throws_err_on_empty_list,
+        first_working_on_non_empty_list,
+        first_throws_err_on_empty_list,
+        last_working_on_non_empty_list,
+        last_throws_err_on_empty_list,
 //        size_working,
 //        empty_working,
 //        clear_working_on_non_empty_list,
