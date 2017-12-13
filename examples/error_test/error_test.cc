@@ -1561,63 +1561,187 @@ auto last_throws_err_on_empty_list = []{
 // size and empty
 
 auto size_working = []{
-    // TODO
-    reportCaseFail("size_working",
-                   "",
-                   "Unimplemented");
-    return false;
+    try {
+        keyed_queue<int, int> kq;
+        kq.push(1, 3);
+        custom_assert(kq.size() == 1, "Wrong count");
+        kq.push(21, 37);
+        custom_assert(kq.size() == 2, "Wrong count");
+        kq.push(21, 37);
+        custom_assert(kq.size() == 3, "Wrong count");
+        kq.pop(21);
+        custom_assert(kq.size() == 2, "Wrong count");
+    } catch(int e) {
+        if(e == ASSERTION_FAIL) {
+            reportCaseFail("size_working",
+                           "",
+                           "wrong count");
+            return false;
+        }
+    } catch (...) {
+        reportCaseFail("size_working",
+                       "no exceptions thrown",
+                       "unknown exception thrown");
+        return false;
+    }
+    return true;
 };
 
 auto empty_working = []{
-    // TODO
-    reportCaseFail("empty_working",
-                   "",
-                   "Unimplemented");
-    return false;
+    try {
+        keyed_queue<int, int> kq;
+        custom_assert(kq.empty(), "Empty queue is not empty");
+        kq.push(1, 3);
+        custom_assert(!kq.empty(), "Wrong count");
+        kq.push(1, 3);
+        custom_assert(!kq.empty(), "Wrong count");
+        kq.pop();
+        custom_assert(!kq.empty(), "Too much values removed in pop");
+        kq.pop();
+        custom_assert(kq.empty(), "Empty queue is not empty");
+    } catch(int e) {
+        if(e == ASSERTION_FAIL) {
+            reportCaseFail("empty_working",
+                           "",
+                           "wrong count");
+            return false;
+        }
+    } catch (...) {
+        reportCaseFail("empty_working",
+                       "no exceptions thrown",
+                       "unknown exception thrown");
+        return false;
+    }
+    return true;
 };
 
 // clear
 
 auto clear_working_on_non_empty_list = []{
-    // TODO
-    reportCaseFail("clear_working_on_non_empty_list",
-                   "",
-                   "Unimplemented");
-    return false;
+    try {
+        keyed_queue<int, int> kq;
+        for(int count = 0; count < 100; count++) {
+            for(int i=0; i<count; i++) {
+                kq.push(i, i);
+            }
+            kq.clear();
+            custom_assert(kq.empty(),  "queue not empty");
+        }
+    } catch(int e) {
+        if(e == ASSERTION_FAIL) {
+            reportCaseFail("clear_working_on_non_empty_list",
+                           "",
+                           "queue not empty");
+            return false;
+        }
+    } catch (...) {
+        reportCaseFail("clear_working_on_non_empty_list",
+                       "no exceptions thrown",
+                       "unknown exception thrown");
+        return false;
+    }
+    return true;
 };
 
 auto clear_working_on_empty_list = []{
-    // TODO
-    reportCaseFail("clear_working_on_empty_list",
-                   "",
-                   "Unimplemented");
-    return false;
+    keyed_queue<int, int> kq;
+    try {
+        kq.clear();
+        custom_assert(kq.empty(),  "queue not empty");
+    } catch(int e) {
+        if(e == ASSERTION_FAIL) {
+            reportCaseFail("clear_working_on_empty_list",
+                           "",
+                           "queue not empty");
+            return false;
+        }
+    } catch (...) {
+        reportCaseFail("clear_working_on_empty_list",
+                       "no exceptions thrown",
+                       "unknown exception thrown");
+        return false;
+    }
+    return true;
 };
 
 // count
 
 auto count_working_on_non_empty_list = []{
-    // TODO
-    reportCaseFail("count_working_on_non_empty_list",
-                   "",
-                   "Unimplemented");
-    return false;
+    try {
+        keyed_queue<int, int> kq;
+        for(int count = 1; count < 100; count++) {
+            for(int i=0; i<count; i++) {
+                kq.push(i, 1);
+            }
+            for(int i=0; i<count; i++) {
+                custom_assert(kq.count(i) == 1,  "wrong count");
+            }
+            kq.clear();
+        }
+    } catch(int e) {
+        if(e == ASSERTION_FAIL) {
+            reportCaseFail("count_working_on_non_empty_list",
+                           "",
+                           "wrong count");
+            return false;
+        }
+    } catch (...) {
+        reportCaseFail("count_working_on_non_empty_list",
+                       "no exceptions thrown",
+                       "unknown exception thrown");
+        return false;
+    }
+    return true;
 };
 
 auto count_working_on_empty_list = []{
-    // TODO
-    reportCaseFail("count_working_on_empty_list",
-                   "",
-                   "Unimplemented");
-    return false;
+    keyed_queue<int, int> kq;
+    try {
+        custom_assert(kq.count(7) == 0,  "empty queue does not have count == 0");
+    } catch(int e) {
+        if(e == ASSERTION_FAIL) {
+            reportCaseFail("count_working_on_empty_list",
+                           "",
+                           "wrong count");
+            return false;
+        }
+    } catch (...) {
+        reportCaseFail("count_working_on_empty_list",
+                       "no exceptions thrown",
+                       "unknown exception thrown");
+        return false;
+    }
+    return true;
 };
 
 auto count_fails_safely_when_key_comparison_fails = []{
-    // TODO
-    reportCaseFail("count_fails_safely_when_key_comparison_fails",
-                   "",
-                   "Unimplemented");
-    return false;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> kq;
+    for(int size = 1; size < 100; size++) {
+        for(int i=0; i<size; i++) {
+            kq.push(comparable_error_thrower(i), 1);
+            comparable_error_thrower& throwing_key = const_cast<comparable_error_thrower&>(kq.first(comparable_error_thrower(i)).first);
+            throwing_key.set_hooks(false, false, false, true, false);
+        }
+        for(int i=0; i<size; i++) {
+            int err_code = -1;
+            try {
+                kq.count(i) == 1;
+            } catch (int e) {
+                err_code = e;
+            }
+            try {
+                custom_assert(err_code == -1 || err_code == COMPARE_FAIL, "wrong error is re-thrown from queue: " + std::to_string(err_code));
+                custom_assert(kq.size() == size, "queue corrupted by invalid comparison");
+            } catch (...) {
+                reportCaseFail("count_fails_safely_when_key_comparison_fails",
+                               "",
+                               "Assertion failed");
+                return false;
+            }
+        }
+        kq.clear();
+    }
+    return true;
 };
 
 
@@ -1678,13 +1802,13 @@ bool (*cases_to_run[])(void) = {
         first_throws_err_on_empty_list,
         last_working_on_non_empty_list,
         last_throws_err_on_empty_list,
-//        size_working,
-//        empty_working,
-//        clear_working_on_non_empty_list,
-//        clear_working_on_empty_list,
-//        count_working_on_non_empty_list,
-//        count_working_on_empty_list,
-//        count_fails_safely_when_key_comparison_fails
+        size_working,
+        empty_working,
+        clear_working_on_non_empty_list,
+        clear_working_on_empty_list,
+        count_working_on_non_empty_list,
+        count_working_on_empty_list,
+        count_fails_safely_when_key_comparison_fails
 };
 
 int main() {
