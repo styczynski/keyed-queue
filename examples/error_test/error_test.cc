@@ -816,43 +816,143 @@ auto push_working = []{
 };
 
 auto push_key_copy_fail_does_not_modify_queue = []{
-    // TODO
-    reportCaseFail("push_key_copy_fail_does_not_modify_queue",
-                   "",
-                   "Unimplemented");
-    return false;
+    int err_code = -1;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> kq;
+    kq.push(comparable_error_thrower(10, false, false, false, false, false), comparable_error_thrower(20, false, false, false, false, false));
+    try {
+        kq.push(comparable_error_thrower(21, true, false, false, false, false), comparable_error_thrower(37, false, false, false, false, false));
+    } catch(int e) {
+        err_code = e;
+    } catch (...) {
+        // do nothing
+    }
+    try {
+        custom_assert(err_code==-1 || err_code==COPY_FAIL, "Unknown error thrown: "+std::to_string(err_code));
+        if(err_code != -1) {
+            // not sure where exceptions are thrown, but if they were - no changes should've been made
+            custom_assert(kq.front().first == comparable_error_thrower(10) && kq.front().second == comparable_error_thrower(20), "Queue was modified despite exception");
+            custom_assert(kq.back().first == comparable_error_thrower(10) && kq.back().second == comparable_error_thrower(20), "Queue was modified despite exception");
+            custom_assert(kq.size() == 1, "Queue was modified despite exception");
+        }
+    } catch(...) {
+        reportCaseFail("push_key_copy_fail_does_not_modify_queue",
+                       "",
+                       "One of assertions failed - see message above");
+        return false;
+    }
+    return true;
 };
 
 auto push_key_move_fail_does_not_modify_queue = []{
-    // TODO
-    reportCaseFail("push_key_move_fail_does_not_modify_queue",
-                   "",
-                   "Unimplemented");
-    return false;
+    int err_code = -1;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> kq;
+    kq.push(comparable_error_thrower(10, false, false, false, false, false), comparable_error_thrower(20, false, false, false, false, false));
+    try {
+        kq.push(comparable_error_thrower(21, false, true, false, false, false), comparable_error_thrower(37, false, false, false, false, false));
+    } catch(int e) {
+        err_code = e;
+    } catch (...) {
+        // do nothing
+    }
+    try {
+        custom_assert(err_code==-1 || err_code==MOVE_FAIL, "Unknown error thrown: "+std::to_string(err_code));
+        if(err_code != -1) {
+            // not sure where exceptions are thrown, but if they were - no changes should've been made
+            custom_assert(kq.front().first == comparable_error_thrower(10) && kq.front().second == comparable_error_thrower(20), "Queue was modified despite exception");
+            custom_assert(kq.back().first == comparable_error_thrower(10) && kq.back().second == comparable_error_thrower(20), "Queue was modified despite exception");
+            custom_assert(kq.size() == 1, "Queue was modified despite exception");
+        }
+    } catch(...) {
+        reportCaseFail("push_key_move_fail_does_not_modify_queue",
+                       "",
+                       "One of assertions failed - see message above");
+        return false;
+    }
+    return true;
 };
 
 auto push_key_assign_fail_does_not_modify_queue = []{
-    // TODO
-    reportCaseFail("push_key_assign_fail_does_not_modify_queue",
-                   "",
-                   "Unimplemented");
-    return false;
+    int err_code = -1;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> kq;
+    kq.push(comparable_error_thrower(10, false, false, false, false, false), comparable_error_thrower(20, false, false, false, false, false));
+    try {
+        kq.push(comparable_error_thrower(21, false, false, true, false, false), comparable_error_thrower(37, false, false, false, false, false));
+    } catch(int e) {
+        err_code = e;
+    } catch (...) {
+        // do nothing
+    }
+    try {
+        custom_assert(err_code==-1 || err_code==ASSIGN_FAIL, "Unknown error thrown: "+std::to_string(err_code));
+        if(err_code != -1) {
+            // not sure where exceptions are thrown, but if they were - no changes should've been made
+            custom_assert(kq.front().first == comparable_error_thrower(10) && kq.front().second == comparable_error_thrower(20), "Queue was modified despite exception");
+            custom_assert(kq.back().first == comparable_error_thrower(10) && kq.back().second == comparable_error_thrower(20), "Queue was modified despite exception");
+            custom_assert(kq.size() == 1, "Queue was modified despite exception");
+        }
+    } catch(...) {
+        reportCaseFail("push_key_assign_fail_does_not_modify_queue",
+                       "",
+                       "One of assertions failed - see message above");
+        return false;
+    }
+    return true;
 };
 
 auto push_key_compare_fail_does_not_modify_queue = []{
-    // TODO
-    reportCaseFail("push_key_compare_fail_does_not_modify_queue",
-                   "",
-                   "Unimplemented");
-    return false;
+    int err_code = -1;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> kq;
+    kq.push(comparable_error_thrower(10, false, false, false, false, false), comparable_error_thrower(20, false, false, false, false, false));
+    try {
+        kq.push(comparable_error_thrower(21, false, false, false, true, false), comparable_error_thrower(37, false, false, false, false, false));
+    } catch(int e) {
+        err_code = e;
+    } catch (...) {
+        // do nothing
+    }
+    try {
+        custom_assert(err_code==-1 || err_code==COMPARE_FAIL, "Unknown error thrown: "+std::to_string(err_code));
+        if(err_code != -1) {
+            // not sure where exceptions are thrown, but if they were - no changes should've been made
+            custom_assert(kq.front().first == comparable_error_thrower(10) && kq.front().second == comparable_error_thrower(20), "Queue was modified despite exception");
+            custom_assert(kq.back().first == comparable_error_thrower(10) && kq.back().second == comparable_error_thrower(20), "Queue was modified despite exception");
+            custom_assert(kq.size() == 1, "Queue was modified despite exception");
+        }
+    } catch(...) {
+        reportCaseFail("push_key_compare_fail_does_not_modify_queue",
+                       "",
+                       "One of assertions failed - see message above");
+        return false;
+    }
+    return true;
 };
 
 auto push_val_copy_fail_does_not_modify_queue = []{
-    // TODO
-    reportCaseFail("push_val_copy_fail_does_not_modify_queue",
-                   "",
-                   "Unimplemented");
-    return false;
+    int err_code = -1;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> kq;
+    kq.push(comparable_error_thrower(10, false, false, false, false, false), comparable_error_thrower(20, false, false, false, false, false));
+    try {
+        kq.push(comparable_error_thrower(21, false, false, false, false, false), comparable_error_thrower(37, true, false, false, false, false));
+    } catch(int e) {
+        err_code = e;
+    } catch (...) {
+        // do nothing
+    }
+    try {
+        custom_assert(err_code==-1 || err_code==COPY_FAIL, "Unknown error thrown: "+std::to_string(err_code));
+        if(err_code != -1) {
+            // not sure where exceptions are thrown, but if they were - no changes should've been made
+            custom_assert(kq.front().first == comparable_error_thrower(10) && kq.front().second == comparable_error_thrower(20), "Queue was modified despite exception");
+            custom_assert(kq.back().first == comparable_error_thrower(10) && kq.back().second == comparable_error_thrower(20), "Queue was modified despite exception");
+            custom_assert(kq.size() == 1, "Queue was modified despite exception");
+        }
+    } catch(...) {
+        reportCaseFail("push_val_copy_fail_does_not_modify_queue",
+                       "",
+                       "One of assertions failed - see message above");
+        return false;
+    }
+    return true;
 };
 
 // pop
@@ -1161,12 +1261,12 @@ bool (*cases_to_run[])(void) = {
         assign_key_assign_fail_does_not_modify_queue,
         assign_key_compare_fail_does_not_modify_queue,
         assign_val_copy_fail_does_not_modify_queue,
-//        push_working,
-//        push_key_copy_fail_does_not_modify_queue,
-//        push_key_move_fail_does_not_modify_queue,
-//        push_key_assign_fail_does_not_modify_queue,
-//        push_key_compare_fail_does_not_modify_queue,
-//        push_val_copy_fail_does_not_modify_queue,
+        push_working,
+        push_key_copy_fail_does_not_modify_queue,
+        push_key_move_fail_does_not_modify_queue,
+        push_key_assign_fail_does_not_modify_queue,
+        push_key_compare_fail_does_not_modify_queue,
+        push_val_copy_fail_does_not_modify_queue,
 //        pop_working,
 //        pop_key_copy_fail_does_not_modify_queue,
 //        pop_key_move_fail_does_not_modify_queue,
