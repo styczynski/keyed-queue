@@ -958,51 +958,181 @@ auto push_val_copy_fail_does_not_modify_queue = []{
 // pop
 
 auto pop_working = []{
-    // TODO
-    reportCaseFail("pop_working",
-                   "",
-                   "Unimplemented");
-    return false;
+    try {
+        keyed_queue<int, int> kq1;
+        keyed_queue<comparable_error_thrower, comparable_error_thrower> kq2;
+
+        // this test obviously assumes #push is working :c
+        kq1.push(1, 2);
+        kq1.push(3, 4);
+        kq2.push(comparable_error_thrower(1), comparable_error_thrower(2));
+        kq2.push(comparable_error_thrower(3), comparable_error_thrower(4));
+
+        kq1.pop();
+        kq1.pop();
+
+        kq2.pop();
+        kq2.pop();
+
+        custom_assert(kq1.empty() && kq2.empty(),
+                      "Swapped queue contains wrong elements");
+    } catch (...) {
+        reportCaseFail("pop_working",
+                       "No errors thrown",
+                       "Unknown error thrown");
+        return false;
+    }
+    return true;
 };
 
 auto pop_key_copy_fail_does_not_modify_queue = []{
-    // TODO
-    reportCaseFail("pop_key_copy_fail_does_not_modify_queue",
-                   "",
-                   "Unimplemented");
-    return false;
+    int err_code = -1;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> kq;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> target;
+    try {
+        kq.push(comparable_error_thrower(10, false, false, false, false, false), comparable_error_thrower(20, false, false, false, false, false));
+        comparable_error_thrower& throwing_key = const_cast<comparable_error_thrower&>(kq.front().first);
+        throwing_key.set_hooks(true, false, false, false, false);
+        target.pop();
+    } catch(int e) {
+        err_code = e;
+    } catch (...) {
+        // do nothing
+    }
+    try {
+        custom_assert(err_code==-1 || err_code==COPY_FAIL, "Unknown error thrown: "+std::to_string(err_code));
+        if(err_code != -1) {
+            // not sure where exceptions are thrown, but if they were - no changes should've been made
+            custom_assert(!target.empty(), "Item was popped despite exception");
+            custom_assert(kq.front().first == comparable_error_thrower(10) && kq.front().second == comparable_error_thrower(20), "Source was modified despite exception");
+        }
+    } catch(...) {
+        reportCaseFail("pop_key_copy_fail_does_not_modify_queue",
+                       "",
+                       "One of assertions failed - see message above");
+        return false;
+    }
+    return true;
 };
 
 auto pop_key_move_fail_does_not_modify_queue = []{
-    // TODO
-    reportCaseFail("pop_key_move_fail_does_not_modify_queue",
-                   "",
-                   "Unimplemented");
-    return false;
+    int err_code = -1;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> kq;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> target;
+    try {
+        kq.push(comparable_error_thrower(10, false, false, false, false, false), comparable_error_thrower(20, false, false, false, false, false));
+        comparable_error_thrower& throwing_key = const_cast<comparable_error_thrower&>(kq.front().first);
+        throwing_key.set_hooks(false, true, false, false, false);
+        target.pop();
+    } catch(int e) {
+        err_code = e;
+    } catch (...) {
+        // do nothing
+    }
+    try {
+        custom_assert(err_code==-1 || err_code==MOVE_FAIL, "Unknown error thrown: "+std::to_string(err_code));
+        if(err_code != -1) {
+            // not sure where exceptions are thrown, but if they were - no changes should've been made
+            custom_assert(!target.empty(), "Item was popped despite exception");
+            custom_assert(kq.front().first == comparable_error_thrower(10) && kq.front().second == comparable_error_thrower(20), "Source was modified despite exception");
+        }
+    } catch(...) {
+        reportCaseFail("pop_key_move_fail_does_not_modify_queue",
+                       "",
+                       "One of assertions failed - see message above");
+        return false;
+    }
+    return true;
 };
 
 auto pop_key_assign_fail_does_not_modify_queue = []{
-    // TODO
-    reportCaseFail("pop_key_assign_fail_does_not_modify_queue",
-                   "",
-                   "Unimplemented");
-    return false;
+    int err_code = -1;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> kq;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> target;
+    try {
+        kq.push(comparable_error_thrower(10, false, false, false, false, false), comparable_error_thrower(20, false, false, false, false, false));
+        comparable_error_thrower& throwing_key = const_cast<comparable_error_thrower&>(kq.front().first);
+        throwing_key.set_hooks(false, false, true, false, false);
+        target.pop();
+    } catch(int e) {
+        err_code = e;
+    } catch (...) {
+        // do nothing
+    }
+    try {
+        custom_assert(err_code==-1 || err_code==ASSIGN_FAIL, "Unknown error thrown: "+std::to_string(err_code));
+        if(err_code != -1) {
+            // not sure where exceptions are thrown, but if they were - no changes should've been made
+            custom_assert(!target.empty(), "Item was popped despite exception");
+            custom_assert(kq.front().first == comparable_error_thrower(10) && kq.front().second == comparable_error_thrower(20), "Source was modified despite exception");
+        }
+    } catch(...) {
+        reportCaseFail("pop_key_assign_fail_does_not_modify_queue",
+                       "",
+                       "One of assertions failed - see message above");
+        return false;
+    }
+    return true;
 };
 
 auto pop_key_compare_fail_does_not_modify_queue = []{
-    // TODO
-    reportCaseFail("pop_key_compare_fail_does_not_modify_queue",
-                   "",
-                   "Unimplemented");
-    return false;
+    int err_code = -1;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> kq;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> target;
+    try {
+        kq.push(comparable_error_thrower(10, false, false, false, false, false), comparable_error_thrower(20, false, false, false, false, false));
+        comparable_error_thrower& throwing_key = const_cast<comparable_error_thrower&>(kq.front().first);
+        throwing_key.set_hooks(false, false, false, true, false);
+        target.pop();
+    } catch(int e) {
+        err_code = e;
+    } catch (...) {
+        // do nothing
+    }
+    try {
+        custom_assert(err_code==-1 || err_code==COMPARE_FAIL, "Unknown error thrown: "+std::to_string(err_code));
+        if(err_code != -1) {
+            // not sure where exceptions are thrown, but if they were - no changes should've been made
+            custom_assert(!target.empty(), "Item was popped despite exception");
+            custom_assert(kq.front().first == comparable_error_thrower(10) && kq.front().second == comparable_error_thrower(20), "Source was modified despite exception");
+        }
+    } catch(...) {
+        reportCaseFail("pop_key_compare_fail_does_not_modify_queue",
+                       "",
+                       "One of assertions failed - see message above");
+        return false;
+    }
+    return true;
 };
 
 auto pop_val_copy_fail_does_not_modify_queue = []{
-    // TODO
-    reportCaseFail("pop_val_copy_fail_does_not_modify_queue",
-                   "",
-                   "Unimplemented");
-    return false;
+    int err_code = -1;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> kq;
+    keyed_queue<comparable_error_thrower, comparable_error_thrower> target;
+    try {
+        kq.push(comparable_error_thrower(10, false, false, false, false, false), comparable_error_thrower(20, false, false, false, false, false));
+        comparable_error_thrower& throwing_val = const_cast<comparable_error_thrower&>(kq.front().second);
+        throwing_val.set_hooks(true, false, false, false, false);
+        target.pop();
+    } catch(int e) {
+        err_code = e;
+    } catch (...) {
+        // do nothing
+    }
+    try {
+        custom_assert(err_code==-1 || err_code==COPY_FAIL, "Unknown error thrown: "+std::to_string(err_code));
+        if(err_code != -1) {
+            // not sure where exceptions are thrown, but if they were - no changes should've been made
+            custom_assert(!target.empty(), "Item was popped despite exception");
+            custom_assert(kq.front().first == comparable_error_thrower(10) && kq.front().second == comparable_error_thrower(20), "Source was modified despite exception");
+        }
+    } catch(...) {
+        reportCaseFail("pop_val_copy_fail_does_not_modify_queue",
+                       "",
+                       "One of assertions failed - see message above");
+        return false;
+    }
+    return true;
 };
 
 // pop with key
@@ -1267,12 +1397,12 @@ bool (*cases_to_run[])(void) = {
         push_key_assign_fail_does_not_modify_queue,
         push_key_compare_fail_does_not_modify_queue,
         push_val_copy_fail_does_not_modify_queue,
-//        pop_working,
-//        pop_key_copy_fail_does_not_modify_queue,
-//        pop_key_move_fail_does_not_modify_queue,
-//        pop_key_assign_fail_does_not_modify_queue,
-//        pop_key_compare_fail_does_not_modify_queue,
-//        pop_val_copy_fail_does_not_modify_queue,
+        pop_working,
+        pop_key_copy_fail_does_not_modify_queue,
+        pop_key_move_fail_does_not_modify_queue,
+        pop_key_assign_fail_does_not_modify_queue,
+        pop_key_compare_fail_does_not_modify_queue,
+        pop_val_copy_fail_does_not_modify_queue,
 //        pop_w_key_working,
 //        pop_w_key_key_copy_fail_does_not_modify_queue,
 //        pop_w_key_key_move_fail_does_not_modify_queue,
