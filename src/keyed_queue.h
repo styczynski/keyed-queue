@@ -21,7 +21,7 @@
  */
 class lookup_error : public std::exception {
 private:
-    std::string what_message;
+    const char* what_message;
 public:
 
     /**
@@ -29,11 +29,8 @@ public:
      *
      * @param[in] additionalDescription : Additional debug info
      */
-    lookup_error(std::string additionalDescription) {
-        std::ostringstream out;
-        out << "Keyed queue lookup error. ";
-        out << additionalDescription;
-        what_message = out.str();
+    lookup_error(const char* additionalDescription) {
+        what_message = additionalDescription;
     }
 
     /**
@@ -42,7 +39,7 @@ public:
      * @returns const char* description of the error
      */
     const char* what() {
-        return what_message.c_str();
+        return what_message;
     }
 };
 
@@ -529,7 +526,9 @@ private:
          * Create empty data set.
          */
         queue_data(): keys(), fifo() {
-            }
+        
+        }
+        
         /**
          * Move contructor.
          */
@@ -547,18 +546,21 @@ public:
      * Creates empty keyed queue.
      */
     keyed_queue(): sd() {
+        
      }
     
     /**
      * Creates keyed queue from another one.
      */
     keyed_queue(keyed_queue const& q): sd(q.sd) {
+        
     }
     
     /**
      * Creates keyed queue from another one.
      */
     keyed_queue(keyed_queue&& q): sd(std::move(q.sd)) {
+        
     }
     
     /**
