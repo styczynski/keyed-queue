@@ -969,7 +969,7 @@ public:
             } else {
                 isFirst = false;
             }
-            out << "&" << (&e.first) << " => &" << (&e.second);
+            out << e.first << << " => " << e.second;
         }
         out << " }";
         return out.str();
