@@ -20,6 +20,7 @@
 #include "keyed_queue.h"
 #include <vector>
 #include <algorithm>
+#include <iostream>
 
 /*
  * TODO:
