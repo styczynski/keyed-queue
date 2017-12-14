@@ -133,8 +133,8 @@ public:
          * Please use copy() to make sure you are always working on copied object.
          */
         void commit() {
-            *ref.shareableState = true;
             std::swap(ref.shared_data, buffer);
+            *ref.shareableState = true;
         }
     };
     
@@ -957,6 +957,7 @@ public:
 
     /**
      * Returns std::string human readable representation of the keyed queue.
+     * Operator std::ostringstream << T must be defined for both types K and V
      *
      * @returns human readable representation
      */
@@ -971,7 +972,7 @@ public:
             } else {
                 isFirst = false;
             }
-            out << e.first << << " => " << e.second;
+            out << e.first << " => " << e.second;
         }
         out << " }";
         return out.str();
