@@ -364,7 +364,7 @@ public:
          * Move to next position.
          * @throws never
          */
-        void operator++() noexcept {
+        void operator++() {
             if(assigned) ++map_iter;
         }
         
@@ -372,7 +372,7 @@ public:
          * Compare iterators.
          * @throws never
          */
-        bool operator==(k_iterator k) noexcept {
+        bool operator==(k_iterator k) {
             if(!assigned || !k.assigned) return false;
             return map_iter == k.map_iter;
         }
@@ -381,7 +381,7 @@ public:
          * Compare iterators.
          * @throws never
          */
-        bool operator!=(k_iterator k) noexcept {
+        bool operator!=(k_iterator k) {
             if(!assigned || !k.assigned) return true;
             return map_iter != k.map_iter;
         }
@@ -534,33 +534,37 @@ public:
         const auto iter = writer->keys.find(k);
         if(iter == writer->keys.end()) {
             throw lookup_error("pop(K): Key not present in the queue.");
-        } else {
-            
-            // Buffers to store moved elements
-            kv_list fifo_delta;
-            kvi_list keys_delta;
-            
-            // If this condition is true then we failed to clean up keys mapping.
-            // Keys mapping should contain no empty iterator list!
-            assert(!(iter->second).empty());
-            
-            // Get the first element of the iterator list
-            const auto e = (iter->second).front();
-            
-            // Move out element from the queue
-            fifo_delta.splice(fifo_delta.begin(),  writer->fifo, e);
-            
-            // Move out the element iterator from the mapping
-            keys_delta.splice(keys_delta.begin(), iter->second, (iter->second).begin());
-            
-            // Remove the elements
-            fifo_delta.clear(); // < MAY FAIL
-            keys_delta.clear(); // < MAY FAIL
-            
-            // Erase the keys mapping list if it's empty
-            if((iter->second).size() <= 0) {
-                writer->keys.erase(iter); // < MAY FAIL
-            }
+        }
+        
+        if(iter->second.empty()) {
+            throw lookup_error("pop(K): Key not present in the queue.");
+        }
+        
+        // Buffers to store moved elements
+        kv_list fifo_delta;
+        kvi_list keys_delta;
+        
+        // Check if there's any iterator for the given key
+        if((iter->second).empty()) {
+            throw lookup_error("pop(K): Key not present in the queue.");
+        }
+        
+        // Get the first element of the iterator list
+        const auto e = (iter->second).front();
+        
+        // Move out element from the queue
+        fifo_delta.splice(fifo_delta.begin(),  writer->fifo, e);
+        
+        // Move out the element iterator from the mapping
+        keys_delta.splice(keys_delta.begin(), iter->second, (iter->second).begin());
+        
+        // Remove the elements
+        fifo_delta.clear(); // < MAY FAIL
+        keys_delta.clear(); // < MAY FAIL
+        
+        // Erase the keys mapping list if it's empty
+        if((iter->second).size() <= 0) {
+            writer->keys.erase(iter); // < MAY FAIL
         }
         
         writer.commit();
@@ -596,9 +600,13 @@ public:
         
         // The key must be present in the mapping
         assert(i != writer->keys.end());
+        assert(!(i->second).empty());
         
         // Obtain the list of iterators with matching key
         auto& list = i->second;
+        
+        // Iterator list must contain at least one key (the one we will remove)
+        assert(!list.empty());
         
         // If the first element of the list in the mapping
         // is not equal to the iterator of the first element of the queue
@@ -638,6 +646,11 @@ public:
         
         // Find the list of iterators with matching keys
         auto& list = i->second;
+        
+        if(list.empty()) {
+            throw lookup_error("move_to_back(K): There's no such key in the queue.");
+        }
+        
         // For all iterators
         for(auto e=list.begin();e!=list.end();++e) {
             // Move element to the back of the queue (do not perform copy)!
@@ -724,6 +737,11 @@ public:
         if(keyloc == reader->keys.end()) {
             throw lookup_error("first(K): Key not present in the queue.");
         }
+        
+        if(keyloc->second.empty()) {
+            throw lookup_error("first(K): Key not present in the queue.");
+        }
+        
         return { key, (keyloc->second.front())->second };
     }
 
@@ -740,6 +758,11 @@ public:
         if(keyloc == reader->keys.end()) {
             throw lookup_error("last(K): Key not present in the queue.");
         }
+        
+        if(keyloc->second.empty()) {
+            throw lookup_error("last(K): Key not present in the queue.");
+        }
+        
         return { key, (keyloc->second.back())->second };
     }
 
@@ -756,6 +779,11 @@ public:
         if(keyloc == reader->keys.end()) {
             throw lookup_error("first(K): Key not present in the queue.");
         }
+        
+        if(keyloc->second.empty()) {
+            throw lookup_error("first(K): Key not present in the queue.");
+        }
+        
         return { key, (keyloc->second.front())->second };
     }
 
@@ -772,6 +800,11 @@ public:
         if(keyloc == reader->keys.end()) {
             throw lookup_error("last(K): Key not present in the queue.");
         }
+        
+        if(keyloc->second.empty()) {
+            throw lookup_error("last(K): Key not present in the queue.");
+        }
+        
         return { key, (keyloc->second.back())->second };
     }
 
@@ -805,11 +838,19 @@ public:
     /**
      * Clears the queue contents.
      */
-    void clear() noexcept {
+    void clear() {
         check();
         auto writer = sd.write();
         
-        writer->fifo.clear(); // < MAY FAIL
+        kv_list fifo_delta;
+        kvi_list keys_delta;
+        
+        kvi_map empty_keys;
+        
+        fifo_delta.splice(fifo_delta.end(), writer->fifo);
+        std::swap(writer->keys, empty_keys);
+        
+        fifo_delta.clear(); // < MAY FAIL
         writer->keys.clear(); // < MAY FAIL
         
         writer.commit();
