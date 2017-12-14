@@ -55,6 +55,7 @@ public:
     }
 };
 
+
 /**
  * Copy-on-write data container
  *
@@ -72,6 +73,152 @@ private:
     
 public:
 
+    class cow_writer {
+    private:
+        cow_data<T>& ref;
+        std::shared_ptr<T> buffer;
+        
+    public:
+        
+        cow_writer(cow_data<T>& data): ref(data) {
+            if(!is_shared()) {
+                buffer = ref.shared_data;
+            } else {
+                buffer = std::make_shared<T>(T(*ref.shared_data));
+            }
+        }
+        
+        ~cow_writer() {
+            
+        }
+        
+        /**
+         * Checks if any COW container is currently sharing the local data.
+         *
+         * @returns Is the held data shared by any other container?
+         */
+        bool is_shared() const noexcept {
+            return ref.shared_data.use_count() > 1;
+        }
+        
+        T& operator*() {
+            return *buffer;
+        }
+        
+        T* operator->() {
+            return &(*buffer);
+        }
+        
+        void commit() {
+            *ref.shareableState = true;
+            std::swap(ref.shared_data, buffer);
+        }
+    };
+    
+    class cow_reader {
+    private:
+        const cow_data<T>& ref;
+        
+    public:
+        
+        cow_reader(const cow_data<T>& data): ref(data) {
+           
+        }
+        
+        ~cow_reader() {
+            
+        }
+        
+        /**
+         * Checks if any COW container is currently sharing the local data.
+         *
+         * @returns Is the held data shared by any other container?
+         */
+        bool is_shared() const noexcept {
+            return ref.shared_data.use_count() > 1;
+        }
+        
+        const T& operator*() const {
+            return *ref.shared_data;
+        }
+        
+        const T * operator->() const {
+            return &(*ref.shared_data);
+        }
+    };
+    
+    class cow_persistent_reader {
+    private:
+        const cow_data<T>& ref;
+        
+    public:
+        
+        cow_persistent_reader(const cow_data<T>& data): ref(data) {
+            *ref.shareableState = false;
+        }
+        
+        ~cow_persistent_reader() {
+            
+        }
+        
+        /**
+         * Checks if any COW container is currently sharing the local data.
+         *
+         * @returns Is the held data shared by any other container?
+         */
+        bool is_shared() const noexcept {
+            return ref.shared_data.use_count() > 1;
+        }
+        
+        const T& operator*() const {
+            return *ref.shared_data;
+        }
+        
+        const T * operator->() const {
+            return &(*ref.shared_data);
+        }
+    };
+    
+    class cow_persistent_writer {
+    private:
+        cow_data<T>& ref;
+        
+    public:
+        
+        cow_persistent_writer(cow_data<T>& data): ref(data) {
+            *ref.shareableState = false;
+        }
+        
+        ~cow_persistent_writer() {
+            
+        }
+        
+        /**
+         * Checks if any COW container is currently sharing the local data.
+         *
+         * @returns Is the held data shared by any other container?
+         */
+        bool is_shared() const noexcept {
+            return ref.shared_data.use_count() > 1;
+        }
+        
+        T& operator*() {
+            return *ref.shared_data;
+        }
+        
+        T * operator->() {
+            return &(*ref.shared_data);
+        }
+    };
+
+    /**
+     * Creates empty container using default empty constructor of type T.
+     * By default container is standalone and sharable.
+     */
+    cow_data(T value): shareableState(std::make_shared<bool>(true)), shared_data(std::make_shared<T>(T())) {
+        shared_data = std::make_shared<T>(value);
+    }
+    
     /**
      * Creates empty container using default empty constructor of type T.
      * By default container is standalone and sharable.
@@ -120,104 +267,31 @@ public:
         return *this;
     }
     
-    /**
-     * If the object is shared then it becomes standalone object.
-     * In that scenario method invokes copy construtor of type T and perform full copy.
-     * If the object is standalone then nothing happens.
-     * 
-     * @returns reference to self
-     */
-    cow_data<T>& disjoin() {
-        if(!is_shared()) return *this;
-        shared_data = std::make_shared<T>(T(*shared_data));
-        return *this;
+    cow_reader read() const {
+        return cow_reader(*this);
     }
     
-    /**
-     * Access underlying data.
-     *
-     * @returns reference to held data
-     * @throws never
-     */
-    T& read() noexcept {
+    cow_persistent_writer writePersistent() {
+        return cow_persistent_writer(*this);
+    }
+    
+    cow_persistent_reader readPersistent() const {
+        return cow_persistent_reader(*this);
+    }
+    
+    cow_writer write() {
+        return cow_writer(*this);
+    }
+    
+    const T& operator*() const {
         return *shared_data;
     }
     
-    /**
-     * Access unerlying data without modifying contents.
-     * 
-     * @returns const reference to held data
-     * @throws never
-     */
-    const T& read_const() const noexcept {
-        return *shared_data;
-    }
-    
-    /**
-     * Mark data as unshareable.
-     * Unshareable data will accept no new forks.
-     * Each COW container that tries to copy data from unshareable cotainer
-     * will always perform full copy.
-     *
-     * @returns reference to self
-     */
-    const cow_data<T>& unshareable() const noexcept {
-        *shareableState = false;
-        return *this;
-    }
-    
-    /**
-     * Mark data as unshareable.
-     * Unshareable data will accept no new forks.
-     * Each COW container that tries to copy data from unshareable cotainer
-     * will always perform full copy.
-     *
-     * @returns reference to self
-     */
-    cow_data<T>& unshareable() noexcept {
-        *shareableState = false;
-        return *this;
-    }
-    
-    /**
-     * Mark data as shareable.
-     * Unshareable data will accept no new forks.
-     * Each COW container that tries to copy data from unshareable cotainer
-     * will always perform full copy.
-     *
-     * This method does the reverse of unshareable().
-     *
-     * @returns reference to self
-     */
-    const cow_data<T>& shareable() const noexcept {
-        *shareableState = true;
-        return *this;
-    }
-    
-    /**
-     * Mark data as shareable.
-     * Unshareable data will accept no new forks.
-     * Each COW container that tries to copy data from unshareable cotainer
-     * will always perform full copy.
-     *
-     * This method does the reverse of unshareable().
-     *
-     * @returns reference to self
-     */
-    cow_data<T>& shareable() noexcept {
-        *shareableState = true;
-        return *this;
-    }
-    
-    /**
-     * Checks if any COW container is currently sharing the local data.
-     *
-     * @returns Is the held data shared by any other container?
-     */
-    bool is_shared() const noexcept {
-        return shared_data.use_count() > 1;
+    const T* operator->() const {
+        return &(*shared_data);
     }
 };
+
 
 /**
  * Keyed queue is a FIFO structure that can held pairs of key, value.
@@ -245,7 +319,8 @@ private:
     using kvi_map = std::map<K, kvi_list>;
     /** Iterator to the mapping key -> list of key, value iterators */
     using kvi_map_i = typename kvi_map::iterator;
-
+    /** Const iterator to the mapping key -> list of key, value iterators */
+    using kvi_map_ic = typename kvi_map::const_iterator;
     
 public:
 
@@ -255,7 +330,7 @@ public:
     class k_iterator {
     private:
         /** Helper iterator - iterating through keys mapping */
-        kvi_map_i map_iter;
+        kvi_map_ic map_iter;
         /** If the iterator was initialized? */
         bool assigned;
         
@@ -264,7 +339,7 @@ public:
         /**
          * Create new interator from keys mapping iterator.
          */
-        k_iterator(const kvi_map_i i) {
+        k_iterator(kvi_map_ic i) {
             map_iter = i;
             assigned = true;
         }
@@ -326,7 +401,7 @@ private:
      * Internal data of keyed_queue.
      */
     class queue_data {
-    private:
+    public:
         /** Keys mapping: key -> list of iterators pointing to this.fifo */
         kvi_map keys;
         /** List of key, value pairs */
@@ -368,349 +443,6 @@ private:
         
         }
         
-        /**
-         * Keyed queue operation implementation
-         */
-        void push(K const &k, V const &v) {
-            
-            //TODO: This do not provide ANY exception guarantee!
-            // Idk check this shit out plz
-            
-            // Helper buffer
-            kv_list fifo_delta;
-            
-            try {
-                // Insert new pair to the helper buffer
-                fifo_delta.push_back({k, v}); // < This may fail!
-            } catch(...) {
-                // TODO: This probably does nothing?
-                //       The try-catch block should be removed
-                // Rethrow error
-                throw;
-            }
-            
-            // Import buffer to the actual queue
-            fifo.splice(fifo.end(), fifo_delta); // < Safe
-            
-            // Make sure the keys mapping contains at least empty list for the new key
-            const auto l = keys.insert({ k, {} }); // < This may too? Maybe?
-            // Obtain the iterator to the inserted element
-            auto delta_i = fifo.end();
-            --delta_i;
-            // Insert the iterator in the mapping
-            (l.first)->second.push_back(delta_i); // < Safe
-            
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        void pop(K const &k) {
-            // Try to find key in the mapping
-            const auto iter = keys.find(k);
-            if(iter == keys.end()) {
-                throw lookup_error("pop(K): Key not present in the queue.");
-            } else {
-                // TODO: Validate
-                
-                // If this condition is true then we failed to clean up keys mapping.
-                // Keys mapping should contain no empty iterator list!
-                assert(!(iter->second).empty());
-                
-                // Get the first element of the iterator list
-                const auto e = (iter->second).front();
-                
-                // Erase that element from the queue
-                fifo.erase(e); // < TODO: May fail
-                
-                // Pop the element from the keys mapping
-                (iter->second).pop_front();
-                
-                // Erase the keys mapping list if it's empty
-                if((iter->second).size() <= 0) {
-                    keys.erase(iter);
-                }
-            }
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        void pop() {
-            if(fifo.empty()) {
-                throw lookup_error("pop(): Queue is empty.");
-            }
-            
-            // TODO: Validate
-            
-            // Get the iterator to the first queue element
-            const auto iter = fifo.begin();
-            
-            // Get the key of that element
-            const auto key = iter->first;
-            
-            // Find the list in the keys mapping with the given key
-            const auto i = keys.find(key);
-            
-            // The key must be present in the mapping
-            assert(i != keys.end());
-            
-            // Obtain the list of iterators with matching key
-            auto& list = i->second;
-            
-            // If the first element of the list in the mapping
-            // is not equal to the iterator of the first element of the queue
-            // then something really bad happened and entire data is broken!
-            assert(list.front() == iter);
-            
-            // Pop the element from the mapping
-            list.pop_front();
-            
-            // Remove list from mapping if it's empty
-            if(list.size() <= 0) {
-                keys.erase(i);
-            }
-            
-            // Finall remove the element from the queue 
-            fifo.pop_front();
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        void move_to_back(K const &k) {
-            const auto i = keys.find(k);
-            if(i == keys.end()) {
-                throw lookup_error("move_to_back(K): There's no such key in the queue.");
-            }
-            
-            // TODO: Validate
-            
-            // Find the list of iterators with matching keys
-            auto& list = i->second;
-            // For all iterators
-            for(auto e=list.begin();e!=list.end();++e) {
-                // Move element to the back of the queue (do not perform copy)!
-                fifo.splice( fifo.end(), fifo, *e );
-            }
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        std::pair<K const &, V &> front() {
-            if(fifo.empty()) {
-                throw lookup_error("front(): Queue is empty.");
-            }
-            auto& ref = fifo.front();
-            return { std::get<0>(ref), std::get<1>(ref) };
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        std::pair<K const &, V &> back() {
-            if(fifo.empty()) {
-                throw lookup_error("back(): Queue is empty.");
-            }
-            auto& ref = fifo.back();
-            return { std::get<0>(ref), std::get<1>(ref) };
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        std::pair<K const &, V const &> front() const {
-            if(fifo.empty()) {
-                throw lookup_error("front(): Queue is empty.");
-            }
-            auto& ref = fifo.front();
-            return { std::get<0>(ref), std::get<1>(ref) };
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        std::pair<K const &, V const &> back() const {
-            if(fifo.empty()) {
-                throw lookup_error("back(): Queue is empty.");
-            }
-            auto& ref = fifo.back();
-            return { std::get<0>(ref), std::get<1>(ref) };
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        std::pair<K const &, V &> first(K const &key) {
-            const auto keyloc = keys.find(key);
-            if(keyloc == keys.end()) {
-                throw lookup_error("first(K): Key not present in the queue.");
-            }
-            return { key, (keyloc->second.front())->second };
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        std::pair<K const &, V &> last(K const &key) {
-            const auto keyloc = keys.find(key);
-            if(keyloc == keys.end()) {
-                throw lookup_error("last(K): Key not present in the queue.");
-            }
-            return { key, (keyloc->second.back())->second };
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        std::pair<K const &, V const &> first(K const &key) const {
-            const auto keyloc = keys.find(key);
-            if(keyloc == keys.end()) {
-                throw lookup_error("first(K): Key not present in the queue.");
-            }
-            return { key, (keyloc->second.front())->second };
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        std::pair<K const &, V const &> last(K const &key) const {
-            const auto keyloc = keys.find(key);
-            if(keyloc == keys.end()) {
-                throw lookup_error("last(K): Key not present in the queue.");
-            }
-            return { key, (keyloc->second.back())->second };
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        size_t size() const noexcept {
-            return fifo.size();
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        bool empty() const noexcept {
-            return fifo.empty();
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        void clear() noexcept {
-            fifo.clear();
-            keys.clear();
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        size_t count(K const &k) const noexcept {
-            const auto i = keys.find(k);
-            if(i != keys.end()) {
-                return i->second.size();
-            }
-            return 0;
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        k_iterator k_begin() {
-            return k_iterator(keys.begin());
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        k_iterator k_end() {
-            return k_iterator(keys.end());
-        }
-        
-        /**
-         * Keyed queue operation implementation
-         */
-        std::string to_string() const {
-            std::ostringstream out;
-            
-            out << "{ ";
-            bool isFirst = true;
-            for(auto e : fifo) {
-                if(!isFirst) {
-                    out << ", ";
-                } else {
-                    isFirst = false;
-                }
-                out << e.first << " => " << e.second;
-            }
-            out << " }";
-            
-            return out.str();
-        }
-        
-        /**
-         * Perform forced integrity check.
-         * The keys mapping and fifo structure is validated.
-         * Note that integrity checks are expensive.
-         */
-        void check_integrity() const {
-            //std::cout << " ()\n";
-            // Iterate mapping
-            int entry_count = 0;
-            for(auto keys_e : keys) {
-                // Key from the mapping
-                const auto key = keys_e.first;
-                // List of iterators for the given key
-                const auto list = keys_e.second;
-                int list_index = 0;
-                entry_count += list.size();
-                for(auto key_i : list) {
-                    // Count keys from the original queue
-                    int count = 0;
-                    auto el = fifo.end();
-                    // Brutal fifo search 
-                    for(auto e=fifo.begin();e!=fifo.end();++e) {
-                        if(e->first == key) {
-                            el = e;
-                            if(count == list_index) break;
-                            ++count;
-                        }
-                    }
-                    // el is now the iterator to the n-th element with the given key
-                    // where n is equal to list_index
-                    
-                    // Iterator in the mapping must be equal to the one
-                    // Determined by brutal fifo search
-                    assert(el == key_i);
-                    
-                    ++list_index;
-                }
-                
-            }
-            
-            // Eevery fifo element must be placed inside mapping
-            assert(entry_count == (signed)fifo.size());
-            
-        }
-        
-        /**
-         * Perform integrity check only if ENABLE_INTEGRITY_CHECKS is enabled.
-         */
-        const queue_data& check() const {
-            if(ENABLE_INTEGRITY_CHECKS) check_integrity();
-            return *this;
-        }
-        
-        /**
-         * Perform integrity check only if ENABLE_INTEGRITY_CHECKS is enabled.
-         */
-        queue_data& check() {
-            if(ENABLE_INTEGRITY_CHECKS) check_integrity();
-            return *this;
-        }
     };
     
     /** Copy-on-write data wrapper */
@@ -722,31 +454,33 @@ public:
      * Creates empty keyed queue.
      */
     keyed_queue(): sd() {
-         
+         check();
     }
     
     /**
      * Creates keyed queue from another one.
      */
     keyed_queue(keyed_queue const& q): sd(q.sd) {
-        
+        check();
     }
     
     /**
      * Creates keyed queue from another one.
      */
     keyed_queue(keyed_queue&& q): sd(std::move(q.sd)) {
-        
+        check();
     }
     
     /**
      * Copies keyed queue from another one.
      */
     keyed_queue &operator=(keyed_queue other) {
+        check();
         sd = other.sd;
         return *this;
     }
     
+   
     /**
      * Push new key, value pair to the front of the queue.
      *
@@ -754,108 +488,293 @@ public:
      * @param[in] v : value
      */
     void push(K const &k, V const &v) {
-        sd.shareable().disjoin().read().check().push(k, v);
+        check();
+        
+        auto writer = sd.write();
+        
+        //TODO: This do not provide ANY exception guarantee!
+        // Idk check this shit out plz
+        
+        // Buffers to store moved elements
+        kv_list fifo_delta;
+        kvi_list keys_delta;
+        
+        fifo_delta.push_back({k, v}); // < MAY FAIL
+        
+        // Make sure the keys mapping contains at least empty list for the new key
+        const auto l = writer->keys.insert({ k, {} }); // < MAY FAIL
+        
+        // Obtain the iterator to the inserted element
+        auto delta_i = fifo_delta.end();
+        --delta_i;
+        keys_delta.push_back(delta_i); // < MAY FAIL
+        
+        // Import buffer to the actual queue
+        writer->fifo.splice(writer->fifo.end(), fifo_delta);
+        
+        
+        // Insert the iterator in the mapping
+        (l.first)->second.splice((l.first)->second.end(), keys_delta);
+        
+        writer.commit();
     }
-    
+
+
     /**
      * Pop the first element from the queue.
      *
      * @throws lookup_error when the queue is empty
      */
-    void pop() {
-        sd.shareable().disjoin().read().check().pop();
+    void pop(K const &k) {
+        check();
+        
+        auto writer = sd.write();
+        
+        // Try to find key in the mapping
+        const auto iter = writer->keys.find(k);
+        if(iter == writer->keys.end()) {
+            throw lookup_error("pop(K): Key not present in the queue.");
+        } else {
+            
+            // Buffers to store moved elements
+            kv_list fifo_delta;
+            kvi_list keys_delta;
+            
+            // If this condition is true then we failed to clean up keys mapping.
+            // Keys mapping should contain no empty iterator list!
+            assert(!(iter->second).empty());
+            
+            // Get the first element of the iterator list
+            const auto e = (iter->second).front();
+            
+            // Move out element from the queue
+            fifo_delta.splice(fifo_delta.begin(),  writer->fifo, e);
+            
+            // Move out the element iterator from the mapping
+            keys_delta.splice(keys_delta.begin(), iter->second, (iter->second).begin());
+            
+            // Remove the elements
+            fifo_delta.clear(); // < MAY FAIL
+            keys_delta.clear(); // < MAY FAIL
+            
+            // Erase the keys mapping list if it's empty
+            if((iter->second).size() <= 0) {
+                writer->keys.erase(iter); // < MAY FAIL
+            }
+        }
+        
+        writer.commit();
     }
-    
-    /**
+
+     /**
      * Pop the first element from the queue with matching key.
      *
      * @param[in] k : key
      * @throws lookup_error when there's no element with given key
      */
-    void pop(K const &k) {
-        sd.shareable().disjoin().read().check().pop(k);
+    void pop() {
+        check();
+        
+        auto writer = sd.write();
+        
+        if(writer->fifo.empty()) {
+            throw lookup_error("pop(): Queue is empty.");
+        }
+        
+        // Buffers to store moved elements
+        kv_list fifo_delta;
+        kvi_list keys_delta;
+        
+        // Get the iterator to the first queue element
+        const auto iter = writer->fifo.begin();
+        
+        // Get the key of that element
+        const auto key = iter->first;
+        
+        // Find the list in the keys mapping with the given key
+        const auto i = writer->keys.find(key); // < MAY FAIL
+        
+        // The key must be present in the mapping
+        assert(i != writer->keys.end());
+        
+        // Obtain the list of iterators with matching key
+        auto& list = i->second;
+        
+        // If the first element of the list in the mapping
+        // is not equal to the iterator of the first element of the queue
+        // then something really bad happened and entire data is broken!
+        assert(list.front() == iter);
+        
+        // Pop the element from the mapping
+        keys_delta.splice(keys_delta.begin(), list, list.begin());
+        
+        // Pop the element from the queue
+        fifo_delta.splice(fifo_delta.begin(), writer->fifo, writer->fifo.begin());
+        
+        // Remove the elements
+        fifo_delta.clear(); // < MAY FAIL
+        keys_delta.clear(); // < MAY FAIL
+        
+        // Remove list from mapping if it's empty
+        if(list.size() <= 0) {
+            writer->keys.erase(i); // < MAY FAIL
+        }
+        
+        writer.commit();
     }
-    
+
     /**
      * Move all elements with matching key to the end of the queue.
      * Operation preserves order of the key, value pairs.
      */
     void move_to_back(K const &k) {
-        sd.shareable().disjoin().read().check().move_to_back(k);
+        check();
+        auto writer = sd.write();
+        
+        const auto i = writer->keys.find(k);
+        if(i == writer->keys.end()) {
+            throw lookup_error("move_to_back(K): There's no such key in the queue.");
+        }
+        
+        // Find the list of iterators with matching keys
+        auto& list = i->second;
+        // For all iterators
+        for(auto e=list.begin();e!=list.end();++e) {
+            // Move element to the back of the queue (do not perform copy)!
+            writer->fifo.splice( writer->fifo.end(), writer->fifo, *e );
+        }
+        
+        writer.commit();
     }
-    
+
     /**
      * Get the first element from the queue.
      *
      * @throws lookup_error when the queue is empty
      */
     std::pair<K const &, V &> front() {
-        return sd.disjoin().unshareable().read().check().front();
+        check();
+        auto reader = sd.writePersistent();
+        
+        if(reader->fifo.empty()) {
+            throw lookup_error("front(): Queue is empty.");
+        }
+        auto& ref = reader->fifo.front();
+        return {std::get<0>(ref), std::get<1>(ref)};
     }
-    
+
     /**
      * Get the last element from the queue.
      *
      * @throws lookup_error when the queue is empty
      */
     std::pair<K const &, V &> back() {
-        return sd.disjoin().unshareable().read().check().back();
+        check();
+        auto reader = sd.writePersistent();
+        
+        if(reader->fifo.empty()) {
+            throw lookup_error("back(): Queue is empty.");
+        }
+        auto& ref = reader->fifo.back();
+        return { std::get<0>(ref), std::get<1>(ref) };
     }
-    
+
     /**
      * Get the first element from the queue.
      *
      * @throws lookup_error when the queue is empty
      */
     std::pair<K const &, V const &> front() const {
-        return sd.unshareable().read_const().check().front();
+        check();
+        auto reader = sd.readPersistent();
+        
+        if(reader->fifo.empty()) {
+            throw lookup_error("front(): Queue is empty.");
+        }
+        auto& ref = reader->fifo.front();
+        return { std::get<0>(ref), std::get<1>(ref) };
     }
-    
+
     /**
      * Get the last element from the queue.
      *
      * @throws lookup_error when the queue is empty
      */
     std::pair<K const &, V const &> back() const {
-        return sd.unshareable().read_const().check().back();
+        check();
+        auto reader = sd.readPersistent();
+        
+        if(reader->fifo.empty()) {
+            throw lookup_error("back(): Queue is empty.");
+        }
+        auto& ref = reader->fifo.back();
+        return { std::get<0>(ref), std::get<1>(ref) };
     }
-    
-    /**
+
+   /**
      * Get the first element from the queue with matching key.
      *
      * @throws lookup_error when the queue does not contain element with given key
      */
     std::pair<K const &, V &> first(K const &key) {
-        return sd.disjoin().read().check().first(key);
+        check();
+        auto reader = sd.writePersistent();
+        
+        const auto keyloc = reader->keys.find(key);
+        if(keyloc == reader->keys.end()) {
+            throw lookup_error("first(K): Key not present in the queue.");
+        }
+        return { key, (keyloc->second.front())->second };
     }
-    
+
     /**
      * Get the last element from the queue with matching key.
      *
      * @throws lookup_error when the queue does not contain element with given key
      */
     std::pair<K const &, V &> last(K const &key) {
-        return sd.disjoin().read().check().last(key);
+        check();
+        auto reader = sd.writePersistent();
+        
+        const auto keyloc = reader->keys.find(key);
+        if(keyloc == reader->keys.end()) {
+            throw lookup_error("last(K): Key not present in the queue.");
+        }
+        return { key, (keyloc->second.back())->second };
     }
-    
+
     /**
      * Get the first element from the queue with matching key.
      *
      * @throws lookup_error when the queue does not contain element with given key
      */
     std::pair<K const &, V const &> first(K const &key) const {
-        return sd.unshareable().read_const().check().first(key);
+        check();
+        auto reader = sd.readPersistent();
+        
+        const auto keyloc = reader->keys.find(key);
+        if(keyloc == reader->keys.end()) {
+            throw lookup_error("first(K): Key not present in the queue.");
+        }
+        return { key, (keyloc->second.front())->second };
     }
-    
+
     /**
      * Get the last element from the queue with matching key.
      *
      * @throws lookup_error when the queue does not contain element with given key
      */
     std::pair<K const &, V const &> last(K const &key) const {
-        return sd.unshareable().read_const().check().last(key);
+        check();
+        auto reader = sd.readPersistent();
+        
+        const auto keyloc = reader->keys.find(key);
+        if(keyloc == reader->keys.end()) {
+            throw lookup_error("last(K): Key not present in the queue.");
+        }
+        return { key, (keyloc->second.back())->second };
     }
-    
+
     /**
      * Gets the number of elements of the queue.
      *
@@ -863,9 +782,12 @@ public:
      * @throws never
      */
     size_t size() const noexcept {
-        return sd.read_const().check().size();
+        check();
+        auto reader = sd.read();
+        
+        return reader->fifo.size();
     }
-    
+
     /**
      * Checks if the queue is empty.
      * This can be implemented via (size() == 0)
@@ -874,62 +796,150 @@ public:
      * @throws never
      */
     bool empty() const noexcept {
-        return sd.read_const().check().empty();
+        check();
+        auto reader = sd.read();
+        
+        return reader->fifo.empty();
     }
-    
-    // TODO: Disjoin can potentially throw?
-    // If not mark that as noexcept
+
     /**
      * Clears the queue contents.
      */
-    void clear() {
-        sd.shareable().disjoin().read().check().clear();
+    void clear() noexcept {
+        check();
+        auto writer = sd.write();
+        
+        writer->fifo.clear(); // < MAY FAIL
+        writer->keys.clear(); // < MAY FAIL
+        
+        writer.commit();
     }
-    
+
     /**
      * Gets the number of elements with the given key.
      *
      * @returns nonzero count of elements with matching key
      * @throws never
      */
-    size_t count(K const &k) const noexcept {
-        return sd.read_const().check().count(k);
+    size_t count(K const &k) const {
+        check();
+        auto reader = sd.read();
+        
+        const auto i = reader->keys.find(k); // < MAY FAIL
+        if(i != reader->keys.end()) {
+            return i->second.size();
+        }
+        return 0;
     }
-    
+
     /**
      * Obtains the iterator to the queue first element.
      *
      * @returns keyed queue iterator
      */
     k_iterator k_begin() {
-        return sd.read().check().k_begin();
+        check();
+        auto reader = sd.read();
+        
+        return k_iterator(reader->keys.begin());
     }
-    
+
     /**
      * Obtains the past-the-end iterator of the queue.
      *
      * @returns keyed queue iterator
      */
     k_iterator k_end() {
-        return sd.read().check().k_end();
+        check();
+        auto reader = sd.read();
+        
+        return k_iterator(reader->keys.end());
     }
-    
+
     /**
      * Returns std::string human readable representation of the keyed queue.
      *
      * @returns human readable representation
      */
     std::string to_string() const {
-        return sd.read_const().check().to_string();
+        auto reader = sd.read();
+        
+        std::ostringstream out;
+        
+        out << "{ ";
+        bool isFirst = true;
+        for(auto e : reader->fifo) {
+            if(!isFirst) {
+                out << ", ";
+            } else {
+                isFirst = false;
+            }
+            out << e.first << " => " << e.second;
+        }
+        out << " }";
+        
+        return out.str();
     }
-    
+
     /**
-     * Request data structure to perform forced integrity check.
-     * Integrity checks validate internal structure of data.
-     * Note that they are taking huge amounts of time!
+     * Perform forced integrity check.
+     * The keys mapping and fifo structure is validated.
+     * Note that integrity checks are expensive.
      */
-    void check() { 
-        sd.read().integrity_check();
+    void check_integrity() const {
+        auto reader = sd.read();
+        
+        //std::cout << " ()\n";
+        // Iterate mapping
+        int entry_count = 0;
+        for(auto keys_e : reader->keys) {
+            // Key from the mapping
+            const auto key = keys_e.first;
+            // List of iterators for the given key
+            const auto list = keys_e.second;
+            int list_index = 0;
+            entry_count += list.size();
+            for(auto key_i : list) {
+                // Count keys from the original queue
+                int count = 0;
+                auto el = reader->fifo.end();
+                // Brutal fifo search 
+                for(auto e=reader->fifo.begin();e!=reader->fifo.end();++e) {
+                    if(e->first == key) {
+                        el = e;
+                        if(count == list_index) break;
+                        ++count;
+                    }
+                }
+                // el is now the iterator to the n-th element with the given key
+                // where n is equal to list_index
+                
+                // Iterator in the mapping must be equal to the one
+                // Determined by brutal fifo search
+                assert(el == key_i);
+                
+                ++list_index;
+            }
+            
+        }
+        
+        // Eevery fifo element must be placed inside mapping
+        assert(entry_count == (signed)(reader->fifo.size()));
+        
+    }
+
+    /**
+     * Perform integrity check only if ENABLE_INTEGRITY_CHECKS is enabled.
+     */
+    void check() const {
+        if(ENABLE_INTEGRITY_CHECKS) check_integrity();
+    }
+
+    /**
+     * Perform integrity check only if ENABLE_INTEGRITY_CHECKS is enabled.
+     */
+    void check() {
+        if(ENABLE_INTEGRITY_CHECKS) check_integrity();
     }
 };
 
