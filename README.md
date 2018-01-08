@@ -1,147 +1,66 @@
-# JNP1 Zadanie 5
+# Keyed queue
 
-# Tipy
-- pamiętać o includach (XD)
-- czytanki dot. **shared pointer** i **gotf44** są ważne do tego zadania
-- warto zajrzeć do `std::list` - w tym zastosowaniu ma pożądane własności
-  - iteratory zachowujące ważność przy przenoszeniu (nawet między listami)
-  - `list::splice`
-- wyjątki w bibliotece standardowej: 
-  - `noexcept` → nigdy nie rzuci wyjątku
-  - brak `noexcept` → nie znaczy że rzuca wyjątki
-    - szczególnie jeśli jest poprawnie używany
-- nie zaśmiecać globalnej przestrzeni nazw, w szczególności nie wstawiać rzeczy mogących powodować kolizje
-- trzymać się `const` i nie robić const castów
-- używać `noexcept` tam gdzie to ma sens (generalnie tam gdzie nie ma alokacji pamięci)
-  - metody front i back są modyfikujące w wersji nie `const` ponieważ zwracają referencję (!!!)
-  - tutaj uważać na haczyk z gotf44 zw. z referencją do wewnątrz struktury i jej okresem ważności
-    - #TODO: przeanalizować przykład z treści zadania
-- struktury prywatne możemy trzymać wewnątrz klasy
-- operacja modyfikująca zakończy się niepowodzeniem → nie powinna unieważniać iteratorów (to oznacza silna odporoność na wyjątki → patrz: copy on write i czytanki - do przemyślenia)
+## About
+
+This library was written on the Faculty of Mathematics, Informathics and Mechanics, Warsaw Univeristy 
+as a part of JNP1 (en. Languages and Tools for Programming) subject in years 2017/2018.
+
+Class `keyed_queue` implements (copy-on-write) queue with map-like keys support. 
+
+## Interface
+
+**keyed_queue<typename K, typename V>** class implements the following methods:
+
+- **void push(K const &k, V const &v)**<br>
+   insert value v to the end of the queue assigning the key k. 
 
 
-# Zadanie kolejka z kluczami, JNPI C++ 2017/18
-
-Celem tego zadania jest zaimplementowanie wzorca kontenera zachowującego
-się jak kolejka FIFO, w której każdy element ma przyporządkowany klucz.
-Kontener ten powinien zapewniać możliwie duże gwarancje odporności na wyjątki
-oraz semantykę kopiowania przy zapisie (copy-on-write).
-
-Kopiowanie przy zapisie to technika optymalizacji szeroko stosowana
-m.in. w strukturach danych z biblioteki Qt oraz dawniej w implementacjach
-std::string. Podstawowa jej idea jest taka, że gdy tworzymy kopię obiektu
-(w C++ za pomocą konstruktora kopiującego lub operator przypisania), to
-współdzieli ona wszystkie wewnętrzne zasoby (które mogą np. w rzeczywistości
-istnieć w oddzielnym obiekcie na stercie) z obiektem źródłowym.
-Taki stan rzeczy może trwać do momentu, w którym jedna z kopii musi zostać
-zmodyfikowana – wtedy modyfikowany obiekt tworzy własną kopię owych zasobów,
-na których wykonuje modyfikacje.
-
-Wzorzec ma być sparametryzowany typami **K** i **V**. Można założyć, że typ klucza **K**
-ma semantykę wartości, czyli w szczególności dostępny jest dla niego
-bezparametrowy konstruktor domyślny, konstruktor kopiujący, przenoszący
-i operatory przypisania. Od typu **K** można również wymagać, aby zdefiniowany był
-na nim porządek liniowy i można na obiektach tego typu wykonywać wszelkie
-porównania. O typie **V** można jedynie założyć, że ma konstruktor kopiujący.
-
-W ramach tego zadania należy zaimplementować szablon:
-
-    template class keyed_queue {
-    };
-
-Klasa `keyed_queue` powinna udostępniać niżej opisane operacje. Przy każdej
-operacji podana jest jej oczekiwana złożoność czasowa, gdzie n oznacza
-liczbą elementów przechowywanych w kolejce. Złożoność czasowa operacji
-kopiowania przy zapisie powinna wynosić **O(n log n)**.
-Wszystkie operacje muszą zapewniać co najmniej silną odporność na wyjątki,
-a konstruktor przenoszący i destruktor muszą być no-throw.
-Tam gdzie jest to możliwe i uzasadnione należy dodać kwalifikator noexcept.
+- **void pop()**<br>
+   removes first element from the queue. If the queue is empty then `lookup_error` is thrown.
 
 
-- **Konstruktor bezparametrowy** tworzący pustą kolejkę. Czas **O(1)**.  
-    `keyed_queue();`
+- **void pop(K const &)**<br>
+   removes the first element from the queue that has the given key value. If no element with such key exists in the queue then `lookup_error` is thrown.
 
 
-- **Konstruktor kopiujący**.  
-  Powinien on mieć semantykę copy-on-write, a więc nie kopiuje wewnętrznych struktur danych, jeśli nie jest to potrzebne. Kolejki współdzielą struktury do czasu modyfikacji jednej z nich. Czas **O(1)** lub **O(n log n)**, jeśli konieczne jest wykonanie kopii.  
-    `keyed_queue(keyed_queue const &);`
+- **void move_to_back(K const &k)**<br>
+   moves the elements with the given key to the end of the queue preserving their relative order. If no element with the provided key exists in the queue then `lookup_error` is thrown.
 
 
-- **Konstruktor przenoszący**. Czas **O(1)**.  
-    `keyed_queue(keyed_queue &&);`
+- **std::pair<K const &, V &>  front()**<br>
+   returns key, value pair for element at the queue front. If the queue is empty then `lookup_error` is thrown. This method allows value modification by reference. Any writing operation performed on the queue may invalidate captured references. Value is unmodificable in `const` version of the method.
+
+- **std::pair<K const &, V &>  back()**<br>
+   returns key, value pair for element at the queue back. If the queue is empty then `lookup_error` is thrown. This method allows value modification by reference. Any writing operation performed on the queue may invalidate captured references. Value is unmodificable in `const` version of the method.
+
+- **std::pair<K const &, V &> front(K const&)**<br>
+   returns key, value pair for the first element on the queue with the given key. If the queue is empty or does not contain any element with the given key then `lookup_error` is thrown. This method allows value modification by reference. Any writing operation performed on the queue may invalidate captured references. Value is unmodificable in `const` version of the method.
+
+- **std::pair<K const &, V &> last(K const&)**<br>
+   returns key, value pair for the last element on the queue with the given key. If the queue is empty or does not contain any element with the given key then `lookup_error` is thrown. This method allows value modification by reference. Any writing operation performed on the queue may invalidate captured references. Value is unmodificable in `const` version of the method.
+
+- **size_t size()**<br>
+   returns the number of elements on the queue
 
 
-- **Operator przypisania**. Operator powinien przyjmować argument przez wartość. Czas **O(1)**.  
-    `keyed_queue &operator=(keyed_queue other);`
+- **bool empty()**<br>
+   returns true if the queue is empty
 
 
-- **Metoda push** wstawia wartość **v** na koniec kolejki, nadając jej klucz **k**. Czas **O(log n)** + ew. czas kopiowania.  
-    `void push(K const &k, V const &v);`
+- **void clear()**<br>
+   clears the queue
 
+- **size_t count(K const &)**<br>
+   counts elements with the given key
 
-- **Metoda pop()** usuwa pierwszy element z kolejki. Jeśli kolejka jest pusta, to podnosi wyjątek lookup_error. Czas **O(log n)** + ew. czas kopiowania.  
-    `void pop();`
+- **keyed_queue::k_iterator k_begin()**<br>
+   returns iterator to the first element in the queue. Can be used to iterate queue in STL-like style.
 
+- **keyed_queue::k_iterator k_end()**<br>
+  returns past-the-end iterator to the queue. Can be used to iterate queue in STL-like style.
 
-- **Metoda pop(k)** usuwa pierwszy element o podanym kluczu z kolejki. Jeśli podanego klucza nie ma w kolejce, to podnosi wyjątek **lookup_error**. Czas **O(log n)** + ew. czas kopiowania.  
-    `void pop(K const &);`
+# Example usage 
 
-
-- **Metoda move_to_back** przesuwa elementy o kluczu k na koniec kolejki, zachowując ich kolejność względem siebie. Zgłasza wyjątek lookup_error, gdy elementu o podanym kluczu nie ma na liście. **Czas O(m + log n)** + ew. czas kopiowania, gdzie m == count(k).  
-    `void move_to_back(K const &k);`
-
-
-- **Metody front i back** zwracają parę klucz-wartość będącą odpowiednio na początku i końcu kolejki. Zwrócona para powinna umożliwić modyfikację wartości, ale nie klucza. Dowolna operacja potencjalnie modyfikująca kolejkę może unieważnić zwrócone referencje. Jeśli kolejka jest pusta, to podnosi wyjątek **lookup_error**. Czas **O(1)** + dla wersji bez const ew. czas kopiowania.  
-    `std::pair front();`
-    `std::pair back();`
-    `std::pair front() const;`
-    `std::pair back() const;`
-
-
-- **Metody first i last** zwracają odpowiednio pierwszą i ostatnią parę klucz-wartość o danym kluczu, podobnie jak front i back. Jeśli podanego klucza nie ma w kolejce, to podnosi wyjątek lookup_error. Czas **O(log n)** + dla wersji bez const ew. czas kopiowania.  
-    `std::pair first(K const &key);`  
-    `std::pair last(K const &key);`  
-    `std::pair first(K const &key) const;`  
-    `std::pair last(K const &key) const;`  
-
-
-- **Metoda size** zwraca liczbę elementów w kolejce. Czas **O(1)**.  
-    `size_t size() const;`
-
-
-- **Metoda empty** zwraca true, gdy kolejka jest pusta, a false w przeciwnym przypadku. Czas **O(1)**.  
-    `bool empty() const;`
-
-
-- **Metoda clear** usuwa wszystkie elementy z kolejki. Czas **O(n)**.  
-    `void clear();`
-
-
-- **Metoda count** zwraca liczbę elementów o podanym kluczu. Czas **O(log n)**.  
-    `size_t count(K const &) const;`
-
-
-- **Iterator k_iterator** oraz **metody k_begin i k_end**, pozwalające przeglądać zbiór kluczy w rosnącej kolejności wartości. Iteratory mogą być unieważnione przez dowolną operację modyfikacji kolejki zakończoną powodzeniem (w tym front, back, first i last w wersjach bez const). Iterator powinien udostępniać przynajmniej następujące operacje:  
-  - **konstruktor bezparametrowy i kopiujący**  
-  - **operator++ prefiksowy**  
-  - **operator== i operator!=**  
-  - **operator***  
-  - Do implementacji można użyć biblioteki **Boost.Operators**.  
-  - Wszelkie operacje w czasie **O(log n)**. Przejrzenie całej kolejki w czasie **O(n)**.  
-
-Iteratory służą jedynie do przeglądania kolejki i za ich pomocą nie można
-modyfikować listy, więc zachowują się jak const_iterator z STL.
-
-Klasa **lookup_error** powinna być zdefiniowana na zewnątrz klasy **keyed_queue**
-i powinna dziedziczyć po std::exception.  
-
-Klasa **keyed_queue** powinna być przezroczysta na wyjątki, czyli powinna
-przepuszczać wszelkie wyjątki zgłaszane przez wywoływane przez nią funkcje
-i przez operacje na jej składowych, a obserwowalny stan obiektów
-nie powinien się zmienić. W szczególności operacje modyfikacji zakończone
-niepowodzeniem nie powinny unieważniać iteratorów.  
-
-# Przykład użycia
 ```c++
     #include "keyed_queue.h"
     #include <cassert>
