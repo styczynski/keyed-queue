@@ -8,7 +8,10 @@
 This library was written on the *Faculty of Mathematics, Informathics and Mechanics, Warsaw Univeristy*<br>
 as a part of **JNP1** (en. Languages and Tools for Programming) subject during **2017/2018** term.
 
-Class `keyed_queue` implements (copy-on-write) queue with map-like keys support. 
+Class `keyed_queue` implements (**copy-on-write**) queue with map-like keys support. 
+
+It provides **strong exception quarantee** for all the methods.<br>
+The guarantee does not support throwing destructors of key or value.
 
 ## Interface
 
