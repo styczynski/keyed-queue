@@ -5,8 +5,8 @@
 
 ## About
 
-This library was written on the Faculty of Mathematics, Informathics and Mechanics, Warsaw Univeristy 
-as a part of JNP1 (en. Languages and Tools for Programming) subject in years 2017/2018.
+This library was written on the *Faculty of Mathematics, Informathics and Mechanics, Warsaw Univeristy*<br>
+as a part of **JNP1** (en. Languages and Tools for Programming) subject during **2017/2018** term.
 
 Class `keyed_queue` implements (copy-on-write) queue with map-like keys support. 
 
